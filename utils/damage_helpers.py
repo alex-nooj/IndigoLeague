@@ -7,9 +7,10 @@ from poke_env.environment.pokemon_type import PokemonType
 from poke_env.environment.side_condition import SideCondition
 from poke_env.environment.status import Status
 from poke_env.environment.weather import Weather
+from utils import format_str
 
 
-def stat_estimation(mon: Pokemon, stat: str):
+def stat_estimation(mon: Pokemon, stat: str) -> float:
     # Stats boosts value
     if mon.boosts[stat] > 1:
         boost = (2 + mon.boosts[stat]) / 2
@@ -40,14 +41,14 @@ def attack_defense_ratio(
 
 
 def burn_multiplier(
-    move_category: MoveCategory, status: typing.Union[Status, None], ability: str
+    move_category: MoveCategory, status: typing.Optional[Status], ability: str
 ) -> float:
     return (
         0.5
         if status == Status.BRN
         and move_category == MoveCategory.PHYSICAL
         and ability is not None
-        and ability.lower() != "guts"
+        and format_str(ability) != "guts"
         else 1.0
     )
 
@@ -76,25 +77,16 @@ def screens_multiplier(
 
 
 def sound_multiplier(
-    move_id: str, usr_ability: str, tgt_ability: typing.Union[str, None]
+    move_id: str, usr_ability: str, tgt_ability: typing.Optional[str]
 ) -> float:
     multiplier = 1.0
-    if move_id.lower().replace("-", "") in ["overdrive", "boomburst"]:
-        if (
-            tgt_ability is not None
-            and tgt_ability.lower().replace("-", "").replace(" ", "") == "punkrock"
-        ):
+    if format_str(move_id) in ["overdrive", "boomburst"]:
+        if tgt_ability is not None and format_str(tgt_ability) == "punkrock":
             multiplier *= 0.5
-        elif (
-            tgt_ability is not None
-            and tgt_ability.lower().replace("-", "").replace(" ", "") == "soundproof"
-        ):
+        elif tgt_ability is not None and format_str(tgt_ability) == "soundproof":
             return 0.0
 
-        if (
-            usr_ability is not None
-            and usr_ability.lower().replace("-", "").replace(" ", "") == "punkrock"
-        ):
+        if usr_ability is not None and format_str(usr_ability) == "punkrock":
             multiplier *= 1.3
     return multiplier
 
@@ -104,7 +96,7 @@ def icescales_multiplier(
 ) -> float:
     if (
         tgt_ability is not None
-        and tgt_ability.lower().replace("-", "").replace(" ", "") == "icescales"
+        and format_str(tgt_ability) == "icescales"
         and move_category == MoveCategory.Special
     ):
         return 0.5
@@ -112,13 +104,13 @@ def icescales_multiplier(
         return 1.0
 
 
-def normalize_damage(damage: float) -> float:
-    return min((damage, 1000.0)) / 1000.0
+def normalize_damage(damage: float, hp: float) -> float:
+    return min((hp - damage), 0) / hp if hp != 0.0 else 0.0
 
 
 def stab_multiplier(usr: Pokemon, move: Move) -> float:
     if usr.type_1 == move.type or usr.type_2 == move.type:
-        if usr.ability is not None and usr.ability.lower() == "adaptability":
+        if usr.ability is not None and format_str(usr.ability) == "adaptability":
             return 2.0
         else:
             return 1.5
@@ -127,12 +119,12 @@ def stab_multiplier(usr: Pokemon, move: Move) -> float:
 
 
 def ability_immunities(
-    move_type: PokemonType, tgt_ability: typing.Union[str, None]
+    move_type: PokemonType, tgt_ability: typing.Optional[str]
 ) -> float:
     if tgt_ability is None:
         return 1.0
     else:
-        ability = tgt_ability.lower().replace(" ", "").replace("-", "")
+        ability = format_str(tgt_ability)
 
     if move_type == PokemonType.WATER:
         if ability in ["dryskin", "stormdrain", "waterabsorb"]:
@@ -155,7 +147,7 @@ def ability_immunities(
 
 
 def type_multiplier(move_id: str, move_type: PokemonType, tgt: Pokemon) -> float:
-    if move_id.lower().replace("-", "") == "freezedry" and PokemonType.WATER in [
+    if format_str(move_id) == "freezedry" and PokemonType.WATER in [
         tgt.type_1,
         tgt.type_2,
     ]:
@@ -172,8 +164,14 @@ def weather_multiplier(
 ) -> float:
     if (
         weather is None
-        or (usr_ability is not None and usr_ability.lower() in ["cloudnine", "airlock"])
-        or (tgt_ability is not None and tgt_ability in ["cloudnine", "airlock"])
+        or (
+            usr_ability is not None
+            and format_str(usr_ability) in ["cloudnine", "airlock"]
+        )
+        or (
+            tgt_ability is not None
+            and format_str(tgt_ability) in ["cloudnine", "airlock"]
+        )
     ):
         return 1.0
     elif weather == Weather.RAINDANCE:
@@ -192,16 +190,16 @@ def weather_multiplier(
 def item_multiplier(item: typing.Union[str, None]) -> float:
     if item is None:
         return 1.0
-    elif item.lower().replace(" ", "").replace("-", "") == "lifeorb":
+    elif format_str(item) == "lifeorb":
         return 5324 / 4096
     else:
         return 1.0
 
 
 def opponent_item_multiplier(item: typing.Union[str, None], move: Move) -> float:
-    if item is None or item == "unknown_item":
+    if item is None or format_str(item) == "unknown_item":
         return 1.0
-    elif item == "airballoon":
+    elif format_str(item) == "airballoon":
         if move.type == PokemonType.GROUND:
             return 0.0
         else:
@@ -242,7 +240,7 @@ def calc_move_damage(
     item_mult = item_multiplier(usr.item)
     # opponent_item_mult = opponent_item_multiplier(tgt.item, move)
     damage = (
-        ((lvl_mult * power * ad_ratio) /50 + 2)
+        ((lvl_mult * power * ad_ratio) / 50 + 2)
         * weather_mult
         * stab
         * type_mult
@@ -253,4 +251,61 @@ def calc_move_damage(
         * ability_mult
         * item_mult
     )
-    return normalize_damage(damage)
+    return normalize_damage(damage, usr.current_hp)
+
+
+def embed_moves(
+    moves: typing.List[Move],
+    usr: Pokemon,
+    tgt: Pokemon,
+    weather: typing.Union[typing.List[Weather], None],
+    side_conditions: typing.List[SideCondition],
+) -> typing.List[float]:
+    """Gets the damage estimates for each move
+
+    Args:
+        moves:
+        usr:
+        tgt:
+        weather:
+        side_conditions:
+
+    Returns:
+
+    """
+    move_embedding = []
+
+    if len(moves) > 4:
+        moves = moves[:4]
+
+    for move in moves:
+        move_embedding += embed_move(move, usr, tgt, weather, side_conditions)
+
+    if len(moves) < 4:
+        for _ in range(4 - len(moves)):
+            move_embedding += [0.0 for _ in range(len(PokemonType) + 1 + 1 + 1)]
+    return move_embedding
+
+
+def embed_move(
+    move: Move,
+    usr: Pokemon,
+    tgt: Pokemon,
+    weather: typing.Union[typing.List[Weather], None],
+    side_conditions: typing.List[SideCondition],
+) -> typing.List[float]:
+    if move.max_pp == 0:
+        pp_ratio = 0.0
+    else:
+        pp_ratio = min((move.current_pp / move.max_pp, 0.0))
+    return [float(move.type == t) for t in PokemonType] + [
+        move.base_power,
+        calc_move_damage(
+            move=move,
+            usr=usr,
+            tgt=tgt,
+            weather=weather,
+            side_conditions=side_conditions,
+        ),
+        pp_ratio,
+    ]

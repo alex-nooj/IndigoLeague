@@ -16,9 +16,8 @@ class PokePath:
 
         # Make all the various paths
         self.log_dir.mkdir(parents=True, exist_ok=True)
-        self.challenger_dir.mkdir(parents=True, exist_ok=True)
-        self.agent_dir.mkdir(parents=True, exist_ok=True)
         self.league_dir.mkdir(parents=True, exist_ok=True)
+        self.challenger_dir.mkdir(parents=True, exist_ok=True)
 
     @property
     def log_dir(self) -> pathlib.Path:
@@ -30,6 +29,7 @@ class PokePath:
 
     @property
     def agent_dir(self) -> pathlib.Path:
+        (self.challenger_dir / self._tag).mkdir(parents=True, exist_ok=True)
         return self.challenger_dir / self._tag
 
     @property

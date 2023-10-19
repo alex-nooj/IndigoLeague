@@ -23,7 +23,7 @@ class PokemonFeatureExtractor(BaseFeaturesExtractor):
             n_linear_layers: Number of linear layers to append after the embedding.
             shared: Number of hiddens in each of the linear layers after concatenation.
         """
-        super().__init__(observation_space, features_dim=1)
+        super().__init__(observation_space, features_dim=shared[-1])
         extractors = {}
         total_concat_size = 0
         for key, subspace in observation_space.items():
@@ -51,7 +51,6 @@ class PokemonFeatureExtractor(BaseFeaturesExtractor):
             linears.append(nn.Linear(in_size, out_size))
             linears.append(nn.Tanh())
         self.linears = nn.Sequential(*linears)
-        self._features_dim = shared[-1]
 
     def forward(self, obs: typing.Dict[str, torch.Tensor]) -> torch.Tensor:
         """Forward function for the extractor.

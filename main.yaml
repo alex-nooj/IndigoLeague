@@ -1,34 +1,42 @@
+# Overview
 battle_format: gen8ou
-total_timesteps: 500_000
-save_freq: 10_000
+total_timesteps: 10_000_000
+save_freq: 50_000
+resume: /media/alex/USB322FD/pokemon_league/challengers/Norman/Norman_300000_steps.zip
+
+# Network
+shared:
+  - 512
+  - 256
+  - 128
+  - 128
+
+pi:
+  - 32
+
+vf:
+  - 32
+
+# Preprocessing
 ops:
-  environment.preprocessing.ops.embed_pokemon_ids.EmbedPokemonIDs:
-    embedding_size: 3
-#  environment.preprocessing.ops.embed_moves.EmbedMoves:
-#    embedding_size: 4
-  environment.preprocessing.ops.embed_abilities.EmbedAbilities:
-    embedding_size: 3
-  environment.preprocessing.ops.embed_active_pokemon.EmbedActivePokemon: {}
-#  environment.preprocessing.ops.simple_op.SimpleOp: {}
-#  environment.preprocessing.ops.embed_team.EmbedTeam: {}
-  environment.preprocessing.ops.embed_field.EmbedField: {}
-  environment.preprocessing.ops.embed_items.EmbedItems:
-    embedding_size: 3
+#  battling.environment.preprocessing.ops.embed_pokemon_ids.EmbedPokemonIDs:
+#    embedding_size: 8
+#  battling.environment.preprocessing.ops.embed_moves.EmbedMoves:
+#    embedding_size: 8
+#  battling.environment.preprocessing.ops.embed_abilities.EmbedAbilities:
+#    embedding_size: 8
+  battling.environment.preprocessing.ops.embed_active_pokemon.EmbedActivePokemon: {}
+#  battling.environment.preprocessing.ops.simple_op.SimpleOp: {}
+  battling.environment.preprocessing.ops.embed_team.EmbedTeam: {}
+  battling.environment.preprocessing.ops.embed_active_moves.EmbedActiveMoves: {}
+#  battling.environment.preprocessing.ops.embed_previous_moves.EmbedPreviousMoves: {}
+  battling.environment.preprocessing.ops.embed_field.EmbedField: {}
+#  battling.environment.preprocessing.ops.embed_items.EmbedItems:
+#    embedding_size: 5
+
+# Rewards
 rewards:
   fainted_value: 0.5
   hp_value: 0.1
   status_value: 0.0
   victory_value: 1.0
-
-shared:
-  - 128
-  - 128
-  - 128
-
-pi:
-  - 64
-
-vf:
-  - 64
-
-#resume: /media/alex/USB322FD/pokemon_league/challengers/Giovanni/Giovanni_1090000_steps.zip

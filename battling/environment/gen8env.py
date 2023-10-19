@@ -1,12 +1,15 @@
 import collections
 import pathlib
 import typing
+import numpy as np
 
 import gym
 import numpy.typing as npt
 import poke_env
 from poke_env import PlayerConfiguration
 from poke_env.environment import AbstractBattle
+from poke_env.environment import Battle
+from poke_env.environment import Status
 from poke_env.player import BattleOrder
 from poke_env.player.openai_api import ActionType, ObservationType
 
@@ -16,11 +19,12 @@ from battling.environment.teams.team_builder import AgentTeamBuilder
 
 
 class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
-    _ACTION_SPACE = list(range(4 + 5))
+    _ACTION_SPACE = list(range(4 + 6))
 
     def __init__(
         self,
         ops: typing.Union[typing.Dict[str, typing.Dict[str, typing.Any]], Preprocessor],
+        seq_len: int,
         tag: str,
         league_path: pathlib.Path,
         fainted_value: float,
@@ -28,18 +32,18 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         status_value: float,
         victory_value: float,
         battle_format: str,
+        team_size: int,
         *args,
-        team_path: typing.Optional[str] = None,
         team: typing.Optional[AgentTeamBuilder] = None,
         **kwargs
     ):
         if isinstance(ops, Preprocessor):
             self.preprocessor = ops
         else:
-            self.preprocessor = Preprocessor(ops)
+            self.preprocessor = Preprocessor(ops, seq_len=seq_len)
 
         if team is None:
-            team = AgentTeamBuilder(battle_format=battle_format, team_path=team_path)
+            team = AgentTeamBuilder(battle_format=battle_format, team_size=team_size)
         super().__init__(
             battle_format=battle_format,
             team=team,
@@ -55,7 +59,10 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
             "victory_value": victory_value,
         }
         self.matchmaker = Matchmaker(
-            tag=tag.rsplit(" ")[0], league_path=league_path, battle_format=battle_format
+            tag=tag.rsplit(" ")[0],
+            league_path=league_path,
+            battle_format=battle_format,
+            team_size=team_size,
         )
         self.win_rates = {}
         self._opp_tag = "RandomPlayer"
@@ -98,14 +105,34 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         self.preprocessor.reset()
         return super().reset(*args, **kwargs)
 
-    def action_to_move(self, action: int, battle: AbstractBattle) -> BattleOrder:
-        if (
-            action < 4
-            and action < len(battle.available_moves)
-            and not battle.force_switch
-        ):
-            return self.agent.create_order(battle.available_moves[action])
-        elif 0 <= action - 4 < len(battle.available_switches):
-            return self.agent.create_order(battle.available_switches[action - 4])
+    def action_masks(self, *args, **kwargs) -> npt.NDArray:
+        battle = self.current_battle
+        moves = np.zeros(4)
+        if battle.active_pokemon is not None:
+            for ix, move in enumerate(battle.active_pokemon.moves.values()):
+                if move.id in [m.id for m in battle.available_moves]:
+                    moves[ix] = 1 if move.current_pp != 0 else 0
+        team = np.zeros(6)
+        team_mon_names = list(battle.team.keys())
+        team_mon_names.sort()
+
+        for ix, mon in enumerate(team_mon_names):
+            team[ix] = int(battle.team[mon].status != Status.FNT and not battle.team[mon].active)
+        return np.concatenate([moves, team])
+
+    def action_to_move(self, action: int, battle: Battle) -> BattleOrder:
+        action_mask = self.action_masks()
+        if action_mask[action]:
+            if action < 4:
+                return self.agent.create_order(
+                    list(battle.active_pokemon.moves.values())[action]
+                )
+            else:
+                return self.agent.create_order(list(battle.team.values())[action - 4])
         else:
             return self.agent.choose_random_move(battle)
+
+    def set_team_size(self, team_size: int):
+        self.agent._team.set_team_size(team_size)
+        self.matchmaker.set_team_size(team_size)
+        self.win_rates = {}

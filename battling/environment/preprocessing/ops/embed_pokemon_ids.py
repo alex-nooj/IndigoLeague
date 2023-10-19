@@ -1,53 +1,49 @@
-import pathlib
 import typing
 
 import gym
+import numpy as np
+import numpy.typing as npt
 import poke_env
 from poke_env.environment import AbstractBattle
-import numpy.typing as npt
-from battling.environment.preprocessing.op import Op
-import numpy as np
 
-from utils.gather_opponent_team import gather_team, gather_opponent_team
+from battling.environment.preprocessing.op import Op
+from utils.embedding_lut import EmbeddingLUT
+from utils.gather_opponent_team import gather_opponent_team
+from utils.gather_opponent_team import gather_team
 
 
 class EmbedPokemonIDs(Op):
-    def __init__(self, embedding_size: int):
+    def __init__(self, embedding_size: int, seq_len: int):
         """Constructor for Op.
 
         Args:
             embedding_size: Size of the output of the embedding layer.  Rule of thumb is (size of codex)^(1/4).
         """
+        super().__init__(seq_len=seq_len, n_features=12, key="pokemon_ids")
         self.id_lut = {}
         self._embedding_size = embedding_size
 
-        pokemon_path = pathlib.Path(__file__).parent.parent.parent / "teams" / "gen8ou"
+        all_mons = {species: info["num"] for species, info in poke_env.GEN8_POKEDEX.items() if info["num"] > 0}
+        self.id_lut = EmbeddingLUT(["fainted"] + list(all_mons.keys()), values=[0] + list(all_mons.values()))
+        self.poke_lut = EmbeddingLUT(self.id_lut.values())
 
-        for species, info in poke_env.GEN8_POKEDEX.items():
-            if info["num"] > 0:
-                self.id_lut[species] = info["num"]
-
-        self.poke_lut = {self.id_lut[pokemon.stem]: ix for ix, pokemon in enumerate(pokemon_path.iterdir())}
-        self.poke_lut["fainted"] = len(self.poke_lut)
-
-    def embed_battle(
+    def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
-    ) -> typing.Dict[str, npt.NDArray]:
-        team_ids = [self.id_lut[mon.species] for mon in gather_team(battle)]
-        if len(team_ids) > 6:
-            team_ids = team_ids[:6]
-        elif len(team_ids) < 6:
-            team_ids += ["fainted" for _ in range(6 - len(team_ids))]
+    ) -> npt.NDArray:
+        mons = [mon.species for mon in gather_team(battle)]
+        opp_mons = [mon.species for mon in gather_opponent_team(battle)]
+        mon_vec = self._embed_pokemon_ids(mons) + self._embed_pokemon_ids(opp_mons)
+        return np.asarray(mon_vec, dtype=np.int64)
 
-        opp_team_ids = [self.id_lut[mon.species] for mon in gather_opponent_team(battle)]
-        if len(opp_team_ids) > 6:
-            opp_team_ids = opp_team_ids[:6]
-        elif len(opp_team_ids) < 6:
-            opp_team_ids += ["fainted" for _ in range(6 - len(opp_team_ids))]
+    def _embed_pokemon_ids(self, mons: typing.List[str]) -> typing.List[int]:
+        if len(mons) > 6:
+            all_mons = mons[:6]
+        elif len(mons) < 6:
+            all_mons = mons + ["fainted" for _ in range(6 - len(mons))]
+        else:
+            all_mons = mons
 
-        ids = team_ids + opp_team_ids
-        state["pokemon_ids"] = np.asarray([self.poke_lut[id] for id in ids], dtype=np.int64)
-        return state
+        return [self.poke_lut[self.id_lut[mon]] for mon in all_mons]
 
     def describe_embedding(self) -> gym.spaces.Dict:
         """Describes the output of the observation space for this op.
@@ -57,9 +53,17 @@ class EmbedPokemonIDs(Op):
         """
         return gym.spaces.Dict(
             {
-                "pokemon_ids": gym.spaces.Box(
-                    np.array([0 for _ in range(12)], dtype=np.int64),
-                    np.array([len(self.poke_lut) for _ in range(12)]),
+                self.key: gym.spaces.Box(
+                    np.array(
+                        [0 for _ in range(self.seq_len * self.n_features)],
+                        dtype=np.int64,
+                    ),
+                    np.array(
+                        [
+                            len(self.poke_lut)
+                            for _ in range(self.seq_len * self.n_features)
+                        ]
+                    ),
                     dtype=np.int64,
                 )
             }
@@ -72,4 +76,10 @@ class EmbedPokemonIDs(Op):
             Dict[str, Tuple[int, int, int]]: The number of items in the codex, the embedding size, and the number of
                 features
         """
-        return {"pokemon_ids": (len(self.poke_lut), self._embedding_size, 12)}
+        return {
+            self.key: (
+                len(self.poke_lut),
+                self._embedding_size,
+                self.seq_len * self.n_features,
+            )
+        }

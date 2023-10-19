@@ -9,9 +9,13 @@ from battling.environment.preprocessing.op import Op
 
 
 class EmbedField(Op):
-    def embed_battle(
+    def __init__(self, seq_len: int):
+        n_features = len(Weather) + 2 * len(SideCondition) + len(Field)
+        super().__init__(seq_len=seq_len, n_features=n_features, key="field")
+
+    def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
-    ) -> typing.Dict[str, npt.NDArray]:
+    ) -> typing.List[float]:
         weather_vec = [0.0 for _ in Weather]
         for weather in battle.weather:
             weather_vec[weather.value - 1] = 1.0
@@ -28,10 +32,7 @@ class EmbedField(Op):
         for field_effect in battle.fields:
             field[field_effect.value - 1] = 1.0
 
-        state["field"] = np.asarray(
-            weather_vec + side_conditions + opp_side_conditions + field
-        )
-        return state
+        return weather_vec + side_conditions + opp_side_conditions + field
 
     def describe_embedding(self) -> gym.spaces.Dict:
         """Describes the output of the observation space for this op.
@@ -39,12 +40,11 @@ class EmbedField(Op):
         Returns:
             gym.spaces.Dict: Dictionary entry describing the observation space of this op alone.
         """
-        n_features = len(Weather) + 2 * len(SideCondition) + len(Field)
         return gym.spaces.Dict(
             {
-                "field": gym.spaces.Box(
-                    np.asarray([0.0 for _ in range(n_features)]),
-                    np.asarray([1.0 for _ in range(n_features)]),
+                self.key: gym.spaces.Box(
+                    np.asarray([0.0 for _ in range(self.seq_len * self.n_features)]),
+                    np.asarray([1.0 for _ in range(self.seq_len * self.n_features)]),
                     dtype=np.float32,
                 )
             }

@@ -1,0 +1,139 @@
+{
+  "chansey": [
+            "growl",
+            "toxic",
+            "confide",
+            "block",
+            "endeavor",
+            "laserfocus",
+            "incinerate",
+            "poweruppunch",
+            "mudslap",
+            "rollout",
+            "headbutt",
+            "mimic",
+            "dynamicpunch",
+            "curse",
+            "zapcannon",
+            "teleport",
+            "wish",
+            "reflect",
+            "skullbash",
+            "submission",
+            "bubblebeam"
+        ],
+  "blissey": [
+                "growl",
+            "toxic",
+            "confide",
+            "block",
+            "endeavor",
+            "laserfocus",
+            "incinerate",
+            "poweruppunch",
+            "mudslap",
+            "rollout",
+            "headbutt",
+            "mimic",
+            "dynamicpunch",
+            "curse",
+            "zapcannon",
+            "teleport",
+            "wish",
+            "reflect",
+            "skullbash",
+            "submission",
+            "bubblebeam"
+  ],
+  "clefable": ["softboiled", "teleport", "curse", "rollout", "detect"],
+  "alakazam": [
+            "nightshade",
+            "zapcannon",
+            "curse",
+            "dig"
+        ],
+  "dragonite": [
+            "healbell",
+            "curse",
+            "watergun",
+            "raindance",
+            "reflect",
+            "zapcannon",
+            "detect",
+            "skullbash"
+        ],
+  "porygon2": [
+            "teleport",
+            "toxic",
+            "doubleedge",
+            "curse"
+        ],
+  "hitmonlee": [
+            "suckerpunch",
+            "curse"
+        ],
+  "suicune": [
+            "aquaring",
+            "curse"
+        ],
+  "toxtricity": [
+    "venomdrench"
+  ],
+  "pikachu": [
+    "extremespeed",
+    "mudslap"
+  ],
+  "moltres": ["whirlwind"],
+  "jirachi": [
+            "moonblast",
+            "ancientpower",
+            "dracometeor",
+            "dynamicpunch"
+        ],
+  "umbreon": [
+    "healbell",
+    "reflect"
+  ],
+  "espeon": ["zapcannon"],
+  "shuckle": [
+    "smackdown",
+    "confide",
+    "bind",
+    "afteryou",
+    "ancientpower",
+    "stringshot",
+    "headbutt",
+    "doubleedge",
+    "mimic",
+    "curse",
+    "moonblast"
+  ],
+  "tyranitar": ["detect", "dragonbreath"],
+  "victini": [
+    "boltstrike",
+    "blueflare",
+    "fusionflare",
+    "glaciate"
+  ],
+  "togekiss": ["doubleedge", "curse", "detect", "soft-boiled"],
+  "ninetales-alola": ["frostbreath", "reflect", "painsplit", "healbell"],
+  "marowak-alola": ["poweruppunch", "curse"],
+  "ninetalesalola": ["frostbreath", "reflect", "painsplit", "healbell"],
+  "mamoswine": ["detect"],
+  "blastoise": ["curse", "bubblebeam", "doubleedge", "defensecurl", "block"],
+  "charizard": ["tailwind", "toxic", "reflect", "double-edge", "quickattack", "sandstorm", "skullbash", "submission"],
+  "cloyster": ["teleport", "doubleedge", "frostbreath", "reflect"],
+  "nidoking": ["detect"],
+  "scizor": ["skullbash", "curse", "detect", "bugbite"],
+  "slowking": ["zapcannon", "dynamicpunch", "snore", "icywind", "endure", "irontail", "dig", "mudslap", "icepunch", "swift", "furycutter", "nightmare", "strength", "flash", "whirlpool", "reflect", "counter"],
+  "skarmory": ["detect", "tailwind"],
+  "tangrowth": ["painsplit", "skullbash", "doubleedge", "curse"],
+  "gengar": ["poisongas", "painsplit", "infestation", "seismictoss"],
+  "gyarados": ["curse", "skullbash", "bubblebeam", "dragontail"],
+  "snorlax": ["bubblebeam"],
+  "venusaur": ["defensecurl", "megadrain"],
+  "zapdos": ["whirlwind", "curse", "tailwind"],
+  "weavile": ["detect", "curse"],
+  "magnezone": ["teleport", "curse"],
+  "mew": ["vacuumwave", "whirlwind", "nightshade", "tailwind", "fakeout", "confusion", "aquatail"]
+}

@@ -5,18 +5,17 @@ import numpy as np
 import numpy.typing as npt
 from poke_env.environment import AbstractBattle
 from poke_env.environment import PokemonType
-from poke_env.environment import Status
 
 from battling.environment.preprocessing.op import Op
-from utils.normalize_stats import normalize_stats
+from utils.damage_helpers import embed_moves
 
 
-class EmbedActivePokemon(Op):
+class EmbedActiveMoves(Op):
     def __init__(self, seq_len: int):
         super().__init__(
             seq_len=seq_len,
-            n_features=2 * (len(PokemonType) + 8 + len(Status)),
-            key="active_pokemon",
+            n_features=2 * 4 * (len(PokemonType) + 1 + 1 + 1),
+            key="active_moves",
         )
 
     def _embed_battle(
@@ -31,18 +30,27 @@ class EmbedActivePokemon(Op):
         Returns:
             Dict[str, NDArray]: The updated observational state.
         """
-        types = [float(t in battle.active_pokemon.types) for t in PokemonType]
-        stats = normalize_stats(battle.active_pokemon)
-        status = [float(t == battle.active_pokemon.status) for t in Status]
+        moves = embed_moves(
+            moves=battle.active_pokemon.moves.values(),
+            usr=battle.active_pokemon,
+            tgt=battle.opponent_active_pokemon,
+            weather=list(battle.weather.keys())[0] if len(battle.weather) > 0 else None,
+            side_conditions=list(battle.opponent_side_conditions.keys()),
+        )
+        while len(moves) < self.n_features / 2:
+            moves.append(-1.0)
 
-        opp_types = [
-            0.0 if t not in battle.opponent_active_pokemon.types else 1.0
-            for t in PokemonType
-        ]
-        opp_stats = normalize_stats(battle.opponent_active_pokemon)
-        opp_status = [float(t == battle.opponent_active_pokemon.status) for t in Status]
+        opp_moves = embed_moves(
+            moves=list(battle.opponent_active_pokemon.moves.values()),
+            usr=battle.opponent_active_pokemon,
+            tgt=battle.active_pokemon,
+            weather=list(battle.weather.keys())[0] if len(battle.weather) > 0 else None,
+            side_conditions=list(battle.side_conditions.keys()),
+        )
+        while len(opp_moves) < self.n_features / 2:
+            opp_moves.append(-1.0)
 
-        return types + stats + status + opp_types + opp_stats + opp_status
+        return moves + opp_moves
 
     def describe_embedding(self) -> gym.spaces.Dict:
         """Describes the output of the observation space for this op.

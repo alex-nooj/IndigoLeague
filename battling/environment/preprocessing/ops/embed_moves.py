@@ -1,60 +1,49 @@
-import pathlib
 import typing
-import numpy.typing as npt
-from battling.environment.preprocessing.op import Op
-from poke_env.environment import AbstractBattle
-import numpy as np
+
 import gym
+import numpy as np
+import numpy.typing as npt
+from poke_env.environment import AbstractBattle
+
+from battling.environment.preprocessing.op import Op
+from utils.embedding_lut import EmbeddingLUT
+from utils.smogon_data import SmogonData
 
 
 class EmbedMoves(Op):
-    def __init__(self, embedding_size: int):
+    def __init__(self, embedding_size: int, seq_len: int):
         """Constructor for Op.
 
         Args:
             embedding_size: Size of the output of the embedding layer.  Rule of thumb is (size of codex)^(1/4).
         """
-        pokemon_path = pathlib.Path(__file__).parent.parent.parent / "teams" / "gen8ou"
+        super().__init__(seq_len=seq_len, n_features=8, key="move_ids")
+        data = SmogonData()
         moves = {}
-        for mon in pokemon_path.iterdir():
-            for moveset in mon.iterdir():
-                with open(moveset, "r") as fp:
-                    pokemon = fp.read()
-                for move in (
-                    pokemon.rsplit("Nature\n")[-1].replace("- ", "").rsplit("\n")[:-1]
-                ):
-                    moves[move] = 1
-
-        self.moves_lut = {
-            move.lower().replace(" ", "").replace("-", ""): ix
-            for ix, move in enumerate(moves)
-        }
-        self.moves_lut["struggle"] = len(self.moves_lut)
-        self.moves_lut["null"] = len(self.moves_lut)
+        for v in data.smogon_data["data"].values():
+            for move in v["Moves"]:
+                moves[move] = 1
+        self.moves_lut = EmbeddingLUT(["null"] + sorted(list(moves.keys())) + ["struggle"])
         self._embedding_size = embedding_size
 
-    def embed_battle(
+    def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
-    ) -> typing.Dict[str, npt.NDArray]:
-        active_moves = [self.moves_lut[move.id] for move in battle.available_moves]
-        if len(active_moves) > 4:
-            active_moves = active_moves[:4]
-        elif len(active_moves) < 4:
-            active_moves += [
-                self.moves_lut["null"] for _ in range(4 - len(active_moves))
-            ]
-
+    ) -> npt.NDArray:
+        active_moves = [move.id for move in battle.available_moves]
         op_active_moves = [
-            self.moves_lut[move] for move in battle.opponent_active_pokemon.moves
+            move for move in battle.opponent_active_pokemon.moves
         ]
-        if len(op_active_moves) > 4:
-            op_active_moves = op_active_moves[:4]
-        elif len(op_active_moves) < 4:
-            op_active_moves += [
-                self.moves_lut["null"] for _ in range(4 - len(op_active_moves))
-            ]
-        state["move_ids"] = np.asarray(active_moves + op_active_moves, dtype=np.int64)
-        return state
+        ids = self._embed_moves(active_moves) + self._embed_moves(op_active_moves)
+        return np.asarray(ids, dtype=np.int64)
+
+    def _embed_moves(self, moves: typing.List[str]) -> typing.List[int]:
+        if len(moves) > 4:
+            all_moves = moves[:4]
+        elif len(moves) < 4:
+            all_moves = moves + ["null" for _ in range(4 - len(moves))]
+        else:
+            all_moves = moves
+        return [self.moves_lut[move] for move in all_moves]
 
     def describe_embedding(self) -> gym.spaces.Dict:
         """Describes the output of the observation space for this op.
@@ -64,9 +53,9 @@ class EmbedMoves(Op):
         """
         return gym.spaces.Dict(
             {
-                "move_ids": gym.spaces.Box(
-                    np.array([0 for _ in range(8)], dtype=np.int64),
-                    np.array([len(self.moves_lut) for _ in range(8)]),
+                self.key: gym.spaces.Box(
+                    np.array([0 for _ in range(self.seq_len * self.n_features)], dtype=np.int64),
+                    np.array([len(self.moves_lut) for _ in range(self.seq_len * self.n_features)]),
                     dtype=np.int64,
                 )
             }
@@ -79,4 +68,4 @@ class EmbedMoves(Op):
             Dict[str, Tuple[int, int, int]]: The number of items in the codex, the embedding size, and the number of
                 features
         """
-        return {"move_ids": (len(self.moves_lut), self._embedding_size, 8)}
+        return {self.key: (len(self.moves_lut), self._embedding_size, self.seq_len * self.n_features)}

@@ -19,10 +19,12 @@ class OpponentPlayer(Player):
         preprocessor: Preprocessor,
         team: AgentTeamBuilder,
         tag: str,
+        team_size: int,
         *args,
         **kwargs,
     ):
         _PLAYER_COUNTER.update([tag])
+        team.set_team_size(team_size)
         super().__init__(team=team, player_configuration=PlayerConfiguration(f"{tag} {_PLAYER_COUNTER[tag]}", None), *args, **kwargs)
         self._model = model
         self._preprocessor = preprocessor
