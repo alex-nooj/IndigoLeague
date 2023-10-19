@@ -1,0 +1,26 @@
+FROM nvidia/cuda:11.2.2-base-ubuntu20.04 as build
+
+USER root
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y  \
+    curl  \
+    g++ \
+    python3.8 \
+    python3-pip \
+    libcusparse-11-2 && \
+    rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python && \
+    pip install --upgrade pip
+
+FROM build as prod
+
+ARG WORKSPACE_DIR=/workspaces/IndigoLeague
+
+WORKDIR ${WORKSPACE_DIR}
+
+COPY . ${WORKSPACE_DIR}
+
+RUN pip install -r ${WORKSPACE_DIR}/requirements.txt
+
+ENTRYPOINT ["/bin/bash/"]

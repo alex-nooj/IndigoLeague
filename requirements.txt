@@ -1,0 +1,13 @@
+gym~=0.21.0
+numpy~=1.24.2
+omegaconf~=2.3.0
+setuptools~=65.6.3
+trueskill~=0.4.5
+torch~=1.13.1
+poke-env==0.5.0
+stable-baselines3==1.7.0
+pyqt5~=5.15.9
+tqdm~=4.64.1
+plotly~=5.9.0
+PyQtWebEngine==5.15.6
+sb3-contrib==1.7.0
