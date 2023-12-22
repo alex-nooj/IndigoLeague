@@ -4,7 +4,6 @@ import gym
 import numpy as np
 import numpy.typing as npt
 from poke_env.environment import AbstractBattle
-from poke_env.environment import PokemonType
 
 from battling.environment.preprocessing.op import Op
 from utils.damage_helpers import embed_moves
@@ -14,7 +13,7 @@ class EmbedActiveMoves(Op):
     def __init__(self, seq_len: int):
         super().__init__(
             seq_len=seq_len,
-            n_features=2 * 4 * (len(PokemonType) + 1 + 1 + 1),
+            n_features=2 * 4 * (2 + 1 + 1 + 1),
             key="active_moves",
         )
 

@@ -28,13 +28,13 @@ class EmbedMoves(Op):
 
     def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
-    ) -> npt.NDArray:
+    ) -> typing.List[float]:
         active_moves = [move.id for move in battle.available_moves]
         op_active_moves = [
             move for move in battle.opponent_active_pokemon.moves
         ]
         ids = self._embed_moves(active_moves) + self._embed_moves(op_active_moves)
-        return np.asarray(ids, dtype=np.int64)
+        return ids
 
     def _embed_moves(self, moves: typing.List[str]) -> typing.List[int]:
         if len(moves) > 4:

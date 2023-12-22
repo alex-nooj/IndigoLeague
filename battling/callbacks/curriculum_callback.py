@@ -17,8 +17,7 @@ class CurriculumCallback(sb3_callbacks.BaseCallback):
                 total_wins = sum(win_rate)
                 self.logger.record(f"win_rates/{agent}", total_wins)
                 league_agents_beat.append(int(total_wins > (win_rate.maxlen / 2)))
-            if sum(league_agents_beat) == 3:
-                self.training_env.envs[0].env.matchmaker.reset()
+            if sum(league_agents_beat) == 1:
                 return False
         self.next_step = self.locals["dones"][0]
         return True

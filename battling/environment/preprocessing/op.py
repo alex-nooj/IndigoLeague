@@ -26,8 +26,6 @@ class Op(abc.ABC):
         for frame in self.frames:
             ret_list += frame
         ret_val = {self.key: np.asarray(ret_list)}
-        # if ret_val[self.key].shape[0] != self.seq_len * self.n_features:
-        #     raise RuntimeError(f"Op {self.key} has size {ret_val[self.key].shape[0]} (expected {self.seq_len * self.n_features}")
         return ret_val
 
     @abc.abstractmethod
@@ -41,7 +39,7 @@ class Op(abc.ABC):
         self._reset()
         self.frames.clear()
         for _ in range(self.seq_len):
-            self.frames.append([-1.0 for _ in range(self.n_features)])
+            self.frames.append([0.0 for _ in range(self.n_features)])
 
     def embedding_infos(self) -> typing.Dict[str, typing.Tuple[int, int]]:
         return {}

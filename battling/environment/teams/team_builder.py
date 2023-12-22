@@ -1,5 +1,6 @@
 import pathlib
 import typing
+import numpy as np
 
 from poke_env.teambuilder.teambuilder import Teambuilder
 
@@ -31,16 +32,26 @@ def generate_random_team(team_size: int) -> typing.List[str]:
 
 
 class AgentTeamBuilder(Teambuilder):
-    def __init__(self, battle_format: str, team_size: int):
-        self._team = generate_random_team(6)
-        print(self._team[:team_size])
+    def __init__(self, battle_format: str, team_size: int, randomize_team: bool = False):
         self._team_size = team_size
+        if not randomize_team:
+            self._team = generate_random_team(6)
+            print(f"\r{self._team[:team_size]}", end="")
+        else:
+            self._team = None
 
     def set_team_size(self, team_size: int):
         self._team_size = team_size
 
     def yield_team(self) -> str:
-        return self.join_team(self.parse_showdown_team("\n".join(self._team[:self._team_size])))
+        if self._team:
+            ixs = np.random.choice(list(range(len(self._team))), self._team_size, replace=False)
+            team = [self._team[i] for i in ixs]
+            return self.join_team(self.parse_showdown_team("\n".join(team)))
+        else:
+            team = generate_random_team(self._team_size)
+            print(f"\r{team}", end="")
+            return self.join_team(self.parse_showdown_team("\n".join(team)))
 
     @property
     def team_size(self) -> int:

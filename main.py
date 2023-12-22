@@ -1,10 +1,8 @@
 import pathlib
 import typing
 
-import numpy.typing as npt
 import stable_baselines3.common.callbacks as sb3_callbacks
 import torch
-from poke_env.player import RandomPlayer
 from sb3_contrib import MaskablePPO
 from stable_baselines3.common.base_class import BaseAlgorithm
 
@@ -14,7 +12,6 @@ from battling.callbacks.curriculum_callback import CurriculumCallback
 from battling.callbacks.save_peripherals_callback import SavePeripheralsCallback
 from battling.callbacks.success_callback import SuccessCallback
 from battling.environment.gen8env import Gen8Env
-from battling.environment.teams.team_builder import AgentTeamBuilder
 
 
 def resume_training(
@@ -22,8 +19,13 @@ def resume_training(
     battle_format: str,
     rewards: typing.Dict[str, float],
 ) -> typing.Tuple[str, int, utils.PokePath, MaskablePPO, Gen8Env, int]:
-    seq_len = 1
-    tag, n_steps, _ = resume_path.stem.rsplit("_")
+    try:
+        tag, n_steps, _ = resume_path.stem.rsplit("_")
+        n_steps = int(n_steps)
+    except ValueError:
+        tag = resume_path.parent.stem
+        n_steps = int(resume_path.stem.rsplit("_")[-1].rsplit(".")[0])
+
     poke_path = utils.PokePath(tag=tag)
     print(resume_path)
     team_file = resume_path.parent / "team.pth"
@@ -31,20 +33,19 @@ def resume_training(
     team_info = torch.load(team_file)
     team = team_info["team"]
     preprocessor = team_info["preprocessor"]
-    opponent = RandomPlayer(
-        battle_format=battle_format, team=AgentTeamBuilder(battle_format=battle_format, team_size=team.team_size)
-    )
+
     env = Gen8Env(
         preprocessor,
         **rewards,
-        seq_len=seq_len,
         tag=tag,
         league_path=poke_path.league_dir,
         battle_format=battle_format,
-        opponent=opponent,
         start_challenging=True,
         team=team,
-        team_size=team.team_size
+        team_size=team.team_size,
+        change_opponent=False,
+        starting_opponent="SimpleHeuristics",
+        seq_len=1,
     )
 
     model = MaskablePPO.load(
@@ -53,7 +54,7 @@ def resume_training(
         verbose=1,
         tensorboard_log=str(poke_path.agent_dir),
     )
-    return tag, int(n_steps), poke_path, model, env, team.team_size
+    return tag, n_steps, poke_path, model, env, team.team_size
 
 
 def create_env(
@@ -67,10 +68,6 @@ def create_env(
     poke_path = utils.PokePath(tag=tag)
     if tag is None:
         tag = poke_path.tag
-    opponent = RandomPlayer(
-        battle_format=battle_format,
-        team=AgentTeamBuilder(battle_format=battle_format, team_size=team_size),
-    )
 
     return Gen8Env(
         ops,
@@ -79,9 +76,10 @@ def create_env(
         tag=tag,
         league_path=poke_path.league_dir,
         battle_format=battle_format,
-        opponent=opponent,
         start_challenging=True,
         team_size=team_size,
+        change_opponent=False,
+        starting_opponent="SimpleHeuristics",
     )
 
 
@@ -117,6 +115,28 @@ def new_training(
     )
 
     return tag, poke_path, model
+
+
+def curriculum_training(
+    env: Gen8Env,
+    model: MaskablePPO,
+    starting_team_size: int,
+    final_team_size: int,
+    total_timesteps: int,
+    agent_dir: pathlib.Path,
+    callbacks: sb3_callbacks.CallbackList,
+):
+    for team_size in range(starting_team_size, final_team_size):
+        print(f"Team Size: {team_size}")
+        env.set_team_size(team_size)
+        model.set_env(env)
+
+        model.learn(
+            total_timesteps=total_timesteps,
+            callback=callbacks,
+            reset_num_timesteps=False,
+        )
+        model.save(str(agent_dir / f"team_size_{team_size}.zip"))
 
 
 def main(
@@ -156,38 +176,41 @@ def main(
         name_prefix=poke_path.tag,
     )
 
-    for team_size in range(starting_team_size, final_team_size):
-        print(f"Team Size: {team_size}")
-        env.set_team_size(team_size)
-        model.set_env(env)
-
-        model.learn(
+    try:
+        curriculum_training(
+            env=env,
+            model=model,
+            starting_team_size=starting_team_size,
+            final_team_size=final_team_size,
             total_timesteps=total_timesteps,
-            callback=sb3_callbacks.CallbackList(
+            agent_dir=poke_path.agent_dir,
+            callbacks=sb3_callbacks.CallbackList(
                 [
                     checkpoint_callback,
                     SavePeripheralsCallback(poke_path=poke_path, save_freq=save_freq),
                     CurriculumCallback(0.7),
                 ]
             ),
-            reset_num_timesteps=False,
         )
 
-    print(f"Team Size: {final_team_size}")
-    env.set_team_size(final_team_size)
-    model.set_env(env)
-
-    model.learn(
-        total_timesteps=total_timesteps,
-        callback=sb3_callbacks.CallbackList(
-            [
-                checkpoint_callback,
-                SavePeripheralsCallback(poke_path=poke_path, save_freq=save_freq),
-                SuccessCallback(poke_path.agent_dir, poke_path.league_dir, tag=tag),
-            ]
-        ),
-        reset_num_timesteps=False,
-    )
+        print(f"Team Size: {final_team_size}")
+        env.set_team_size(final_team_size)
+        env.change_opponent = True
+        model.set_env(env)
+        model.learn(
+            total_timesteps=total_timesteps,
+            callback=sb3_callbacks.CallbackList(
+                [
+                    checkpoint_callback,
+                    SavePeripheralsCallback(poke_path=poke_path, save_freq=save_freq),
+                    SuccessCallback(poke_path.agent_dir, poke_path.league_dir, tag=tag),
+                ]
+            ),
+            reset_num_timesteps=False,
+        )
+    except KeyboardInterrupt as e:
+        model.save(str(poke_path.agent_dir / f"keyboard_interrupt_{checkpoint_callback.num_timesteps}.zip"))
+        raise e
 
 
 if __name__ == "__main__":

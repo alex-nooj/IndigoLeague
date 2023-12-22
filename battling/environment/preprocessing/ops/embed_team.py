@@ -4,10 +4,10 @@ import gym
 import numpy as np
 import numpy.typing as npt
 from poke_env.environment import AbstractBattle
-from poke_env.environment import PokemonType
 from poke_env.environment import Status
 
 from battling.environment.preprocessing.op import Op
+from utils import damage_helpers
 from utils.damage_helpers import calc_move_damage
 from utils.gather_opponent_team import gather_team
 from utils.normalize_stats import normalize_stats
@@ -17,7 +17,7 @@ class EmbedTeam(Op):
     def __init__(self, seq_len: int):
         super().__init__(
             seq_len=seq_len,
-            n_features=5 * (len(PokemonType) + 8 + len(Status) + 4 * 2),
+            n_features=5 * (2 + 8 + len(Status) + 4 * 2),
             key="team_pokemon",
         )
 
@@ -27,7 +27,13 @@ class EmbedTeam(Op):
         pokemon_list = []
         team = gather_team(battle)[1:]
         for pokemon in team:
-            types = [float(t in pokemon.types) for t in PokemonType]
+            # Rather than encode the pokemon's types as a 1-hot, we'll instead measure the damage multiplier of the
+            # opponent's types against ours (i.e., opponent attacks us)
+            types = [
+                damage_helpers.type_multiplier("", poke_type, battle.active_pokemon) / 4.0
+                if poke_type else -1
+                for poke_type in battle.opponent_active_pokemon.types
+            ]
             stats = normalize_stats(pokemon)
             status = [float(t == pokemon.status) for t in Status]
             # Current move power

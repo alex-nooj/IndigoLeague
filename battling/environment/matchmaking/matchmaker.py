@@ -15,34 +15,33 @@ from battling.environment.teams.team_builder import AgentTeamBuilder
 
 
 class Matchmaker:
-    def __init__(self, tag: str, league_path: pathlib.Path, battle_format: str, team_size: int):
+    def __init__(
+        self, tag: str, league_path: pathlib.Path, battle_format: str, team_size: int
+    ):
         self.agent_skills = {tag: trueskill.Rating()}
         self._tag = tag
         self._battle_format = battle_format
         self._league_path = league_path
         self.team_size = team_size
-        self._curriculum = deque(
-            ["RandomPlayer", "MaxBasePowerPlay", "SimpleHeuristics"]
-        )
-        self._win_streak = deque([], maxlen=100)
-        for agent in self._curriculum:
-            self.agent_skills[agent] = trueskill.Rating()
 
         self._load_league_skills()
 
-    def update_and_choose(
-        self, opponent: str, battle_won: bool
-    ) -> typing.Tuple[str, poke_env.player.Player]:
+    def choose(self) -> typing.Tuple[str, poke_env.player.Player]:
+        opponent_tag = self._choose_trueskill()
+        player = self.load_player(opponent_tag)
+        return opponent_tag, player
+
+    def update(self, opponent: str, battle_won: bool):
         if battle_won:
             self._update(self._tag, opponent)
         else:
             self._update(opponent, self._tag)
 
-        if len(self._curriculum) > 0:
-            self._win_streak.append(int(battle_won))
-            if sum(self._win_streak) > 70:
-                self._curriculum.popleft()
-                self._win_streak = deque([], maxlen=100)
+    def update_and_choose(
+        self, opponent: str, battle_won: bool
+    ) -> typing.Tuple[str, poke_env.player.Player]:
+        self.update(opponent, battle_won)
+
         return self.choose()
 
     def save(self):
@@ -53,20 +52,13 @@ class Matchmaker:
                     "mu": self.agent_skills[agent.stem].mu,
                     "sigma": self.agent_skills[agent.stem].sigma,
                 }
-        for agent in ["RandomPlayer", "MaxBasePowerPlay", "SimpleHeuristics"]:
+        # for agent in ["RandomPlayer", "MaxBasePowerPlay", "SimpleHeuristics"]:
+        for agent in ["SimpleHeuristics"]:
             dict_skills[agent] = {
                 "mu": self.agent_skills[agent].mu,
                 "sigma": self.agent_skills[agent].sigma,
             }
         OmegaConf.save(config=dict_skills, f=(self._league_path / "trueskills.yaml"))
-
-    def reset(self):
-        self._curriculum = deque(
-            ["RandomPlayer", "MaxBasePowerPlay", "SimpleHeuristics"]
-        )
-        self._win_streak = deque([], maxlen=100)
-        for agent in self._curriculum:
-            self.agent_skills[agent] = trueskill.Rating()
 
     def set_team_size(self, team_size: int):
         self.team_size = team_size
@@ -80,18 +72,6 @@ class Matchmaker:
         self.agent_skills[winner], self.agent_skills[loser] = trueskill.rate_1vs1(
             self.agent_skills[winner], self.agent_skills[loser]
         )
-
-    def choose(self) -> typing.Tuple[str, poke_env.player.Player]:
-        opponent_tag = (
-            self._choose_curriculum()
-            if len(self._curriculum) > 0
-            else self._choose_trueskill()
-        )
-        player = self._load_player(opponent_tag)
-        return opponent_tag, player
-
-    def _choose_curriculum(self) -> str:
-        return self._curriculum[0]
 
     def _choose_trueskill(self) -> str:
         # Grab the probability of a tie between our agent and the league agents
@@ -123,29 +103,40 @@ class Matchmaker:
     def _load_league_skills(self):
         if (self._league_path / "trueskills.yaml").is_file():
             self.agent_skills = {}
-            for tag, skill in OmegaConf.load(self._league_path / "trueskills.yaml").items():
+            for tag, skill in OmegaConf.load(
+                self._league_path / "trueskills.yaml"
+            ).items():
                 self.agent_skills[tag] = trueskill.Rating(
                     mu=skill["mu"], sigma=skill["sigma"]
                 )
 
-    def _load_player(self, opponent_tag: str) -> Player:
+    def load_player(self, opponent_tag: str) -> Player:
         if opponent_tag == "RandomPlayer":
             return poke_env.player.RandomPlayer(
                 battle_format=self._battle_format,
                 team=AgentTeamBuilder(
                     battle_format=self._battle_format,
-                    team_size=self.team_size
+                    team_size=self.team_size,
+                    randomize_team=True,
                 ),
             )
         elif opponent_tag == "MaxBasePowerPlay":
             return poke_env.player.MaxBasePowerPlayer(
                 battle_format=self._battle_format,
-                team=AgentTeamBuilder(battle_format=self._battle_format, team_size=self.team_size),
+                team=AgentTeamBuilder(
+                    battle_format=self._battle_format,
+                    team_size=self.team_size,
+                    randomize_team=True,
+                ),
             )
         elif opponent_tag == "SimpleHeuristics":
             return poke_env.player.SimpleHeuristicsPlayer(
                 battle_format=self._battle_format,
-                team=AgentTeamBuilder(battle_format=self._battle_format, team_size=self.team_size),
+                team=AgentTeamBuilder(
+                    battle_format=self._battle_format,
+                    team_size=self.team_size,
+                    randomize_team=True,
+                ),
             )
         else:
             agent_path = self._league_path / opponent_tag
@@ -157,5 +148,5 @@ class Matchmaker:
                 preprocessor=peripherals["preprocessor"],
                 tag=opponent_tag,
                 battle_format=self._battle_format,
-                team_size=self.team_size
+                team_size=self.team_size,
             )

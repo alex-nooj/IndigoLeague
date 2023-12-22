@@ -21,7 +21,7 @@ class EmbedAbilities(Op):
         Args:
             embedding_size: Size of the output of the embedding layer.  Rule of thumb is (size of codex)^(1/4).
         """
-        super().__init__(seq_len=seq_len, n_features=12, key="ability_ids")
+        super().__init__(seq_len=seq_len, n_features=2, key="ability_ids")
         self.abilities_lut = {}
         self._embedding_size = embedding_size
 
@@ -30,11 +30,12 @@ class EmbedAbilities(Op):
         for mon in data.smogon_data["data"].values():
             for ability in mon["Abilities"]:
                 abilities[ability] = True
+        self.abilities_lut = EmbeddingLUT(["insomnia"] + sorted(list(abilities.keys())))
         self.abilities_lut = EmbeddingLUT(["none"] + sorted(list(abilities.keys())))
 
     def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
-    ) -> npt.NDArray:
+    ) -> typing.List[float]:
         """Convert the ability strings to an integer index value.
 
         Args:
@@ -42,17 +43,14 @@ class EmbedAbilities(Op):
             state: Current state of the battle (observation)
 
         Returns:
-            Dict[str, NDArray]: The updated observational state.
+            List[float]: The updated observational state.
         """
-        # Gather all the abilities in the specific order of available switches.
-        abilities = [mon.ability if mon.ability else "none" for mon in gather_team(battle)]
-
-        # Gather the abilities of the opponent team.
-        opp_abilities = [mon.ability if mon.ability else "none" for mon in gather_opponent_team(battle)]
-
-        ids = self._embed_abilities(abilities) + self._embed_abilities(opp_abilities)
-
-        return np.asarray(ids)
+        ids = [self.abilities_lut[battle.active_pokemon.ability if battle.active_pokemon.ability else "none"]]
+        if battle.opponent_active_pokemon.ability:
+            ids.append(self.abilities_lut[battle.opponent_active_pokemon.ability])
+        else:
+            ids.append(self.abilities_lut["none"])
+        return ids
 
     def _embed_abilities(self, abilities: typing.List[str]) -> typing.List[int]:
         if len(abilities) < 6:

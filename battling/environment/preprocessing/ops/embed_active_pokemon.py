@@ -4,10 +4,10 @@ import gym
 import numpy as np
 import numpy.typing as npt
 from poke_env.environment import AbstractBattle
-from poke_env.environment import PokemonType
 from poke_env.environment import Status
 
 from battling.environment.preprocessing.op import Op
+from utils import damage_helpers
 from utils.normalize_stats import normalize_stats
 
 
@@ -15,7 +15,7 @@ class EmbedActivePokemon(Op):
     def __init__(self, seq_len: int):
         super().__init__(
             seq_len=seq_len,
-            n_features=2 * (len(PokemonType) + 8 + len(Status)),
+            n_features=2 * (2 + 8 + len(Status)),
             key="active_pokemon",
         )
 
@@ -31,14 +31,25 @@ class EmbedActivePokemon(Op):
         Returns:
             Dict[str, NDArray]: The updated observational state.
         """
-        types = [float(t in battle.active_pokemon.types) for t in PokemonType]
+
+        # Rather than encode the pokemon's types as a 1-hot, we'll instead measure the damage multiplier of the
+        # opponent's types against ours (i.e., opponent attacks us)
+        types = [
+            damage_helpers.type_multiplier("", poke_type, battle.active_pokemon) / 4.0
+            if poke_type else -1
+            for poke_type in battle.opponent_active_pokemon.types
+        ]
+
         stats = normalize_stats(battle.active_pokemon)
         status = [float(t == battle.active_pokemon.status) for t in Status]
 
+        # Now we measure the damage multiplier of our own types against the opponent
         opp_types = [
-            0.0 if t not in battle.opponent_active_pokemon.types else 1.0
-            for t in PokemonType
+            damage_helpers.type_multiplier("", poke_type, battle.opponent_active_pokemon) / 4.0
+            if poke_type else -1
+            for poke_type in battle.active_pokemon.types
         ]
+
         opp_stats = normalize_stats(battle.opponent_active_pokemon)
         opp_status = [float(t == battle.opponent_active_pokemon.status) for t in Status]
 

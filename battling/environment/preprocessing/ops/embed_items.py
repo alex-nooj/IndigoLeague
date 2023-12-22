@@ -32,11 +32,11 @@ class EmbedItems(Op):
 
     def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
-    ) -> npt.NDArray:
+    ) -> typing.List[float]:
         ally_items = [mon.item if mon.item else "unknown_item" for mon in gather_team(battle)]
         opp_items = [mon.item if mon.item else "unknown_item" for mon in gather_opponent_team(battle)]
         items_vec = self._embed_items(ally_items) + self._embed_items(opp_items)
-        return np.asarray(items_vec)
+        return items_vec
 
     def _embed_items(self, items: typing.List[str]) -> typing.List[int]:
         if len(items) < 6:

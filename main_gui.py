@@ -4,18 +4,8 @@ import typing
 
 import stable_baselines3.common.callbacks as sb3_callbacks
 from PyQt5 import QtGui
-from PyQt5.QtCore import QEventLoop
-from PyQt5.QtCore import QThread
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QFrame
-from PyQt5.QtWidgets import QHBoxLayout
-from PyQt5.QtWidgets import QLabel
-from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtWidgets import QTabWidget
-from PyQt5.QtWidgets import QVBoxLayout
-from PyQt5.QtWidgets import QWidget
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 
 from battling.callbacks.gui_close_callback import ControllerCallback
 from battling.callbacks.gui_close_callback import RunnerCheck
@@ -28,24 +18,25 @@ from gui.training.preprocessing_tab import PreprocessingTab
 from gui.training.resume_tab import ResumeTab
 from gui.training.rewards_tab import RewardsTab
 from gui.training.win_rates_tab import WinRatesTab
+from main import create_env
 from main import new_training
 from main import resume_training
 from utils import PokePath
 
 
 def frame_widget(
-    widget: QWidget,
+    widget: QtWidgets.QWidget,
     fixed_width: bool = True,
     fixed_height: bool = True,
     label: str = None,
-) -> QFrame:
-    frame = QFrame()
-    frame.setFrameStyle(QFrame.Box)
-    frame.setFrameShadow(QFrame.Sunken)
-    widget_box = QVBoxLayout()
+) -> QtWidgets.QFrame:
+    frame = QtWidgets.QFrame()
+    frame.setFrameStyle(QtWidgets.QFrame.Box)
+    frame.setFrameShadow(QtWidgets.QFrame.Sunken)
+    widget_box = QtWidgets.QVBoxLayout()
 
     if label is not None:
-        q_label = QLabel(label)
+        q_label = QtWidgets.QLabel(label)
         bold_font = QtGui.QFont()
         bold_font.setBold(True)
         bold_font.setUnderline(True)
@@ -70,8 +61,8 @@ async def hello_world():
     print("hello world!")
 
 
-class TrainThread(QThread):
-    finished_signal = pyqtSignal()
+class TrainThread(QtCore.QThread):
+    finished_signal = QtCore.pyqtSignal()
 
     def __init__(
         self,
@@ -80,6 +71,8 @@ class TrainThread(QThread):
         battle_format: str,
         total_timesteps: int,
         save_freq: int,
+        seq_len: int,
+        starting_team_size: int,
         shared: typing.List[int],
         pi: typing.List[int],
         vf: typing.List[int],
@@ -97,24 +90,34 @@ class TrainThread(QThread):
         self.pi = pi
         self.vf = vf
         self.resume = resume
-
-        self._event_loop = QEventLoop()
+        self.seq_len = seq_len
+        self.starting_team_size = starting_team_size
+        self._event_loop = QtCore.QEventLoop()
         self.stop_signal_received = RunnerCheck()
 
     def run(self):
         if self.resume is not None and pathlib.Path(self.resume).is_file():
-            tag, n_steps, poke_path, model = resume_training(
+            tag, n_steps, poke_path, model, env, starting_team_size = resume_training(
                 pathlib.Path(self.resume), self.battle_format, self.rewards
             )
             self.total_timesteps -= n_steps
         else:
+            env = create_env(
+                ops=self.ops,
+                rewards=self.rewards,
+                seq_len=self.seq_len,
+                battle_format=self.battle_format,
+                team_size=self.starting_team_size,
+                tag=None,
+            )
+
             tag, poke_path, model = new_training(
-                self.ops,
-                self.rewards,
-                self.battle_format,
+                env,
+                self.seq_len,
                 self.shared,
                 self.pi,
                 self.vf,
+                None,
             )
 
         model.learn(
@@ -140,7 +143,7 @@ class TrainThread(QThread):
         self.finished_signal.emit()
 
 
-class MainWindow(QMainWindow):
+class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
@@ -148,7 +151,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Indigo League")
 
         # create the tab widget
-        self.tabWidget = QTabWidget(self)
+        self.tabWidget = QtWidgets.QTabWidget(self)
         self.setCentralWidget(self.tabWidget)
 
         # Build the config grabbers
@@ -159,11 +162,11 @@ class MainWindow(QMainWindow):
         self.resume_tab = ResumeTab()
 
         # Organize the GUI layout
-        training_tab = QWidget()
-        training_main_box = QVBoxLayout(training_tab)
-        training_box = QHBoxLayout()
+        training_tab = QtWidgets.QWidget()
+        training_main_box = QtWidgets.QVBoxLayout(training_tab)
+        training_box = QtWidgets.QHBoxLayout()
 
-        left_layout = QVBoxLayout()
+        left_layout = QtWidgets.QVBoxLayout()
         left_layout.addWidget(
             frame_widget(
                 self.overview_tab,
@@ -193,7 +196,7 @@ class MainWindow(QMainWindow):
                 label="Network",
             )
         )
-        right_layout = QVBoxLayout()
+        right_layout = QtWidgets.QVBoxLayout()
 
         right_layout.addWidget(
             frame_widget(
@@ -207,7 +210,7 @@ class MainWindow(QMainWindow):
         training_main_box.addLayout(training_box)
         training_main_box.addWidget(frame_widget(self.resume_tab, fixed_width=False))
 
-        self.start_training_button = QPushButton("Start", self)
+        self.start_training_button = QtWidgets.QPushButton("Start", self)
         self.start_training_button.clicked.connect(self.start_training)
 
         training_main_box.addWidget(self.start_training_button)
@@ -216,13 +219,13 @@ class MainWindow(QMainWindow):
         self.tabWidget.addTab(training_tab, "Training")
 
         # create the "Other" tab
-        other_tab = QWidget()
+        other_tab = QtWidgets.QWidget()
         self.tabWidget.addTab(other_tab, "Other")
 
         # create a vertical layout for the "Other" tab
-        other_layout = QVBoxLayout(other_tab)
-        other_layout.addWidget(QPushButton("Button 1"))
-        other_layout.addWidget(QPushButton("Button 2"))
+        other_layout = QtWidgets.QVBoxLayout(other_tab)
+        other_layout.addWidget(QtWidgets.QPushButton("Button 1"))
+        other_layout.addWidget(QtWidgets.QPushButton("Button 2"))
         self.train_thread = None
 
     def start_training(self):
@@ -238,6 +241,8 @@ class MainWindow(QMainWindow):
                 battle_format=overview_args["battle_format"],
                 total_timesteps=overview_args["total_timesteps"],
                 save_freq=overview_args["save_freq"],
+                seq_len=overview_args["seq_len"],
+                starting_team_size=overview_args["starting_team_size"],
                 shared=network_args["shared"],
                 pi=network_args["pi"],
                 vf=network_args["vf"],
@@ -272,7 +277,7 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     mainWindow = MainWindow()
     mainWindow.show()
     sys.exit(app.exec_())

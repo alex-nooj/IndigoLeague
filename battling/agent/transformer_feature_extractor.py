@@ -6,52 +6,7 @@ import torch
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from torch import nn
 
-
-class PokemonTransformer(nn.Module):
-    def __init__(
-        self,
-        in_size: int,
-        d_encoder: int,
-        seq_len: int,
-        n_encoders: int,
-        n_heads: int,
-        d_feedforward: int,
-        dropout: float = 0.0,
-    ):
-        super().__init__()
-        self.projection_layer = nn.Sequential(
-            OrderedDict(
-                [
-                    ("Projection Layer", nn.Linear(in_size // seq_len, d_encoder - 1)),
-                    ("Projection ReLU", nn.ReLU()),
-                ]
-            )
-        )
-
-        encoder_layer = nn.TransformerEncoderLayer(
-            d_model=d_encoder,
-            nhead=n_heads,
-            dim_feedforward=d_feedforward,
-            dropout=dropout,
-            batch_first=True,
-            norm_first=False,
-        )
-
-        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=n_encoders)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        projected_tensor = torch.reshape(
-            self.projection_layer(x.view(-1, x.shape[-1])),
-            (x.shape[0], x.shape[1], -1),
-        )
-        positional_encoding = (
-            torch.linspace(0, 1, x.shape[1], device=x.device)
-            .view(1, -1, 1)
-            .expand(x.shape[0], -1, -1)
-        )
-
-        encoded_tensor = torch.cat((positional_encoding, projected_tensor), dim=-1)
-        return torch.mean(self.transformer(encoded_tensor), dim=1)
+from battling.agent.pokemon_transformer import PokemonTransformer
 
 
 class RemoveSeqLayer(nn.Module):
@@ -116,6 +71,7 @@ class TransformerFeatureExtractor(BaseFeaturesExtractor):
                     "Transformer",
                     PokemonTransformer(
                         input_size,
+                        64,
                         512,
                         seq_len,
                         n_encoders,
@@ -125,7 +81,7 @@ class TransformerFeatureExtractor(BaseFeaturesExtractor):
                     ),
                 )
             ]
-            in_vals = [512] + shared[:-1]
+            in_vals = [64 * seq_len] + shared[:-1]
         else:
             print(f"Input size: {input_size * seq_len}")
             in_vals = [input_size] + shared[:-1]

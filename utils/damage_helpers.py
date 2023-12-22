@@ -105,7 +105,7 @@ def icescales_multiplier(
 
 
 def normalize_damage(damage: float, hp: float) -> float:
-    return min((hp - damage), 0) / hp if hp != 0.0 else 0.0
+    return 1 - min((hp - damage), 0) / hp if hp != 0.0 else 0.0
 
 
 def stab_multiplier(usr: Pokemon, move: Move) -> float:
@@ -283,7 +283,7 @@ def embed_moves(
 
     if len(moves) < 4:
         for _ in range(4 - len(moves)):
-            move_embedding += [0.0 for _ in range(len(PokemonType) + 1 + 1 + 1)]
+            move_embedding += [0.0 for _ in range(2 + 1 + 1 + 1)]
     return move_embedding
 
 
@@ -298,7 +298,10 @@ def embed_move(
         pp_ratio = 0.0
     else:
         pp_ratio = min((move.current_pp / move.max_pp, 0.0))
-    return [float(move.type == t) for t in PokemonType] + [
+    return [
+        type_multiplier("", poke_type, usr) / 4.0 if poke_type else -1
+        for poke_type in tgt.types
+    ] + [
         move.base_power,
         calc_move_damage(
             move=move,

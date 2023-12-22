@@ -14,7 +14,9 @@ class Preprocessor:
         self._embedding_infos = {}
         for op_path, op_args in ops.items():
             op = dynamic_import(op_path)(seq_len=seq_len, **op_args)
+            print(f"{op_path.rsplit('.')[-1]}: {op.n_features}")
             self._ops.append(op)
+
             self._obs_space.update(op.describe_embedding())
             self._embedding_infos.update(op.embedding_infos())
         self._obs_space = gym.spaces.Dict(self._obs_space)

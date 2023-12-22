@@ -29,11 +29,11 @@ class EmbedPokemonIDs(Op):
 
     def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
-    ) -> npt.NDArray:
+    ) -> typing.List[float]:
         mons = [mon.species for mon in gather_team(battle)]
         opp_mons = [mon.species for mon in gather_opponent_team(battle)]
         mon_vec = self._embed_pokemon_ids(mons) + self._embed_pokemon_ids(opp_mons)
-        return np.asarray(mon_vec, dtype=np.int64)
+        return mon_vec
 
     def _embed_pokemon_ids(self, mons: typing.List[str]) -> typing.List[int]:
         if len(mons) > 6:
