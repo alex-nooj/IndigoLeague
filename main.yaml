@@ -2,7 +2,7 @@
 battle_format: gen8ou
 total_timesteps: 100_000_000
 save_freq: 50_000
-resume: /media/alex/USB322FD/pokemon_league/challengers/Lorelei/Lorelei_50000_steps.zip
+#resume: /media/alex/USB322FD/pokemon_league/challengers/Lorelei/Lorelei_50000_steps.zip
 starting_team_size: 1
 
 # Network

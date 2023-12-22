@@ -217,7 +217,7 @@ def calc_move_damage(
     lvl_mult = level_multiplier(usr.level)
     power = move.base_power
     if power == 0:
-        return 0.0
+        return -1.0
     ad_ratio = attack_defense_ratio(move.category, move.defensive_category, usr, tgt)
     weather_mult = weather_multiplier(
         move.type,

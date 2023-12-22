@@ -3,6 +3,7 @@ my-private-reg-pod.yaml
 .idea/*
 .vscode/
 *.pkl
+*.pyc
 __pycache__/
 */__pycache__/
 *.py[cod]
