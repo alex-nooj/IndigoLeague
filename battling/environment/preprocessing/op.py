@@ -1,11 +1,11 @@
 import abc
 import typing
+from collections import deque
 
 import gym
+import numpy as np
 import numpy.typing as npt
 from poke_env.environment import AbstractBattle
-from collections import deque
-import numpy as np
 
 
 class Op(abc.ABC):
@@ -17,10 +17,14 @@ class Op(abc.ABC):
         self.reset()
 
     @abc.abstractmethod
-    def _embed_battle(self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]) -> typing.List[float]:
+    def _embed_battle(
+        self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
+    ) -> typing.List[float]:
         ...
 
-    def embed_battle(self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]) -> typing.Dict[str, npt.NDArray]:
+    def embed_battle(
+        self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
+    ) -> typing.Dict[str, npt.NDArray]:
         self.frames.append(self._embed_battle(battle, state))
         ret_list = []
         for frame in self.frames:

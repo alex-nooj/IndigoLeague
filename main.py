@@ -209,7 +209,12 @@ def main(
             reset_num_timesteps=False,
         )
     except KeyboardInterrupt as e:
-        model.save(str(poke_path.agent_dir / f"keyboard_interrupt_{checkpoint_callback.num_timesteps}.zip"))
+        model.save(
+            str(
+                poke_path.agent_dir
+                / f"keyboard_interrupt_{checkpoint_callback.num_timesteps}.zip"
+            )
+        )
         raise e
 
 

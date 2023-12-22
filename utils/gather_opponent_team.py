@@ -1,6 +1,8 @@
 import typing
 
-from poke_env.environment import AbstractBattle, Pokemon, Status
+from poke_env.environment import AbstractBattle
+from poke_env.environment import Pokemon
+from poke_env.environment import Status
 
 
 def gather_opponent_team(battle: AbstractBattle) -> typing.List[Pokemon]:
@@ -21,7 +23,9 @@ def gather_opponent_team(battle: AbstractBattle) -> typing.List[Pokemon]:
             opponent_team.append(mon)
 
     sorted(opponent_team, key=species)
-    return [battle.opponent_active_pokemon] + [mon for mon in opponent_team if mon.status != Status.FNT]
+    return [battle.opponent_active_pokemon] + [
+        mon for mon in opponent_team if mon.status != Status.FNT
+    ]
 
 
 def gather_team(battle: AbstractBattle) -> typing.List[Pokemon]:

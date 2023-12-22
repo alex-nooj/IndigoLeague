@@ -1,7 +1,10 @@
 import os
 import pathlib
 
-from PyQt5.QtWidgets import QApplication, QComboBox, QWidget, QVBoxLayout
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QComboBox
+from PyQt5.QtWidgets import QVBoxLayout
+from PyQt5.QtWidgets import QWidget
 
 
 class DirectoryComboBox(QWidget):

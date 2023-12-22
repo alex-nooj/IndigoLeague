@@ -23,8 +23,14 @@ class EmbedPokemonIDs(Op):
         self.id_lut = {}
         self._embedding_size = embedding_size
 
-        all_mons = {species: info["num"] for species, info in poke_env.GEN8_POKEDEX.items() if info["num"] > 0}
-        self.id_lut = EmbeddingLUT(["fainted"] + list(all_mons.keys()), values=[0] + list(all_mons.values()))
+        all_mons = {
+            species: info["num"]
+            for species, info in poke_env.GEN8_POKEDEX.items()
+            if info["num"] > 0
+        }
+        self.id_lut = EmbeddingLUT(
+            ["fainted"] + list(all_mons.keys()), values=[0] + list(all_mons.values())
+        )
         self.poke_lut = EmbeddingLUT(self.id_lut.values())
 
     def _embed_battle(

@@ -26,15 +26,22 @@ class EmbedItems(Op):
             for item in mon["Items"]:
                 items[item] = True
 
-        self.items_lut = EmbeddingLUT(["none"] + sorted(list(items.keys())) + ["unknown_item"])
+        self.items_lut = EmbeddingLUT(
+            ["none"] + sorted(list(items.keys())) + ["unknown_item"]
+        )
 
         self._embedding_size = embedding_size
 
     def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
     ) -> typing.List[float]:
-        ally_items = [mon.item if mon.item else "unknown_item" for mon in gather_team(battle)]
-        opp_items = [mon.item if mon.item else "unknown_item" for mon in gather_opponent_team(battle)]
+        ally_items = [
+            mon.item if mon.item else "unknown_item" for mon in gather_team(battle)
+        ]
+        opp_items = [
+            mon.item if mon.item else "unknown_item"
+            for mon in gather_opponent_team(battle)
+        ]
         items_vec = self._embed_items(ally_items) + self._embed_items(opp_items)
         return items_vec
 
@@ -57,8 +64,17 @@ class EmbedItems(Op):
         return gym.spaces.Dict(
             {
                 self.key: gym.spaces.Box(
-                    np.array([0 for _ in range(self.seq_len * self.n_features)], dtype=np.int64),
-                    np.array([len(self.items_lut) for _ in range(self.seq_len * self.n_features)], dtype=np.int64),
+                    np.array(
+                        [0 for _ in range(self.seq_len * self.n_features)],
+                        dtype=np.int64,
+                    ),
+                    np.array(
+                        [
+                            len(self.items_lut)
+                            for _ in range(self.seq_len * self.n_features)
+                        ],
+                        dtype=np.int64,
+                    ),
                     dtype=np.int64,
                 )
             }
@@ -71,4 +87,10 @@ class EmbedItems(Op):
             Dict[str, Tuple[int, int, int]]: The number of items in the codex, the embedding size, and the number of
                 features
         """
-        return {self.key: (len(self.items_lut), self._embedding_size, self.seq_len * self.n_features)}
+        return {
+            self.key: (
+                len(self.items_lut),
+                self._embedding_size,
+                self.seq_len * self.n_features,
+            )
+        }

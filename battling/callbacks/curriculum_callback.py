@@ -11,7 +11,9 @@ class CurriculumCallback(sb3_callbacks.BaseCallback):
         if self.next_step:
             self._next_step = False
             league_agents_beat = []
-            self.logger.record(f"train/team_size", self.training_env.envs[0].env.matchmaker.team_size)
+            self.logger.record(
+                f"train/team_size", self.training_env.envs[0].env.matchmaker.team_size
+            )
             win_rates = self.training_env.envs[0].env.win_rates
             for agent, win_rate in win_rates.items():
                 total_wins = sum(win_rate)

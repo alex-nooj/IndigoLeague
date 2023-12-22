@@ -23,16 +23,16 @@ class EmbedMoves(Op):
         for v in data.smogon_data["data"].values():
             for move in v["Moves"]:
                 moves[move] = 1
-        self.moves_lut = EmbeddingLUT(["null"] + sorted(list(moves.keys())) + ["struggle"])
+        self.moves_lut = EmbeddingLUT(
+            ["null"] + sorted(list(moves.keys())) + ["struggle"]
+        )
         self._embedding_size = embedding_size
 
     def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
     ) -> typing.List[float]:
         active_moves = [move.id for move in battle.available_moves]
-        op_active_moves = [
-            move for move in battle.opponent_active_pokemon.moves
-        ]
+        op_active_moves = [move for move in battle.opponent_active_pokemon.moves]
         ids = self._embed_moves(active_moves) + self._embed_moves(op_active_moves)
         return ids
 
@@ -54,8 +54,16 @@ class EmbedMoves(Op):
         return gym.spaces.Dict(
             {
                 self.key: gym.spaces.Box(
-                    np.array([0 for _ in range(self.seq_len * self.n_features)], dtype=np.int64),
-                    np.array([len(self.moves_lut) for _ in range(self.seq_len * self.n_features)]),
+                    np.array(
+                        [0 for _ in range(self.seq_len * self.n_features)],
+                        dtype=np.int64,
+                    ),
+                    np.array(
+                        [
+                            len(self.moves_lut)
+                            for _ in range(self.seq_len * self.n_features)
+                        ]
+                    ),
                     dtype=np.int64,
                 )
             }
@@ -68,4 +76,10 @@ class EmbedMoves(Op):
             Dict[str, Tuple[int, int, int]]: The number of items in the codex, the embedding size, and the number of
                 features
         """
-        return {self.key: (len(self.moves_lut), self._embedding_size, self.seq_len * self.n_features)}
+        return {
+            self.key: (
+                len(self.moves_lut),
+                self._embedding_size,
+                self.seq_len * self.n_features,
+            )
+        }

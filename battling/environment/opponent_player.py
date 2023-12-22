@@ -25,7 +25,14 @@ class OpponentPlayer(Player):
     ):
         _PLAYER_COUNTER.update([tag])
         team.set_team_size(team_size)
-        super().__init__(team=team, player_configuration=PlayerConfiguration(f"{tag} {_PLAYER_COUNTER[tag]}", None), *args, **kwargs)
+        super().__init__(
+            team=team,
+            player_configuration=PlayerConfiguration(
+                f"{tag} {_PLAYER_COUNTER[tag]}", None
+            ),
+            *args,
+            **kwargs,
+        )
         self._model = model
         self._preprocessor = preprocessor
 

@@ -8,7 +8,9 @@ from utils.dynamic_import import dynamic_import
 
 
 class Preprocessor:
-    def __init__(self, ops: typing.Dict[str, typing.Dict[str, typing.Any]], seq_len: int):
+    def __init__(
+        self, ops: typing.Dict[str, typing.Dict[str, typing.Any]], seq_len: int
+    ):
         self._ops = []
         self._obs_space = {}
         self._embedding_infos = {}

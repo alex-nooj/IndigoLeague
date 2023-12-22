@@ -2,12 +2,10 @@ import pathlib
 import typing
 
 from PyQt5.QtCore import QFileInfo
-from PyQt5.QtWidgets import (
-    QCheckBox,
-    QLineEdit,
-    QFileDialog,
-    QHBoxLayout,
-)
+from PyQt5.QtWidgets import QCheckBox
+from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5.QtWidgets import QLineEdit
 
 from gui.labelled_frame import PokeWidget
 

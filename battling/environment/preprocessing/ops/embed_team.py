@@ -30,8 +30,10 @@ class EmbedTeam(Op):
             # Rather than encode the pokemon's types as a 1-hot, we'll instead measure the damage multiplier of the
             # opponent's types against ours (i.e., opponent attacks us)
             types = [
-                damage_helpers.type_multiplier("", poke_type, battle.active_pokemon) / 4.0
-                if poke_type else -1
+                damage_helpers.type_multiplier("", poke_type, battle.active_pokemon)
+                / 4.0
+                if poke_type
+                else -1
                 for poke_type in battle.opponent_active_pokemon.types
             ]
             stats = normalize_stats(pokemon)

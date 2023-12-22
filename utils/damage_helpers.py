@@ -7,6 +7,7 @@ from poke_env.environment.pokemon_type import PokemonType
 from poke_env.environment.side_condition import SideCondition
 from poke_env.environment.status import Status
 from poke_env.environment.weather import Weather
+
 from utils import format_str
 
 

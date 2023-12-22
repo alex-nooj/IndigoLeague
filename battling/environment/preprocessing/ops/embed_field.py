@@ -3,7 +3,10 @@ import typing
 import gym
 import numpy as np
 import numpy.typing as npt
-from poke_env.environment import AbstractBattle, Weather, SideCondition, Field
+from poke_env.environment import AbstractBattle
+from poke_env.environment import Field
+from poke_env.environment import SideCondition
+from poke_env.environment import Weather
 
 from battling.environment.preprocessing.op import Op
 

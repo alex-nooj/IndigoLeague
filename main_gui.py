@@ -3,20 +3,20 @@ import sys
 import typing
 
 import stable_baselines3.common.callbacks as sb3_callbacks
-from PyQt5 import QtGui
 from PyQt5 import QtCore
+from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from battling.callbacks.gui_close_callback import ControllerCallback
 from battling.callbacks.gui_close_callback import RunnerCheck
 from battling.callbacks.save_peripherals_callback import SavePeripheralsCallback
 from battling.callbacks.success_callback import SuccessCallback
-from gui.training.trueskills_tab import TrueskillsTab
 from gui.training.network_tab import NetworkTab
 from gui.training.overview_tab import OverviewTab
 from gui.training.preprocessing_tab import PreprocessingTab
 from gui.training.resume_tab import ResumeTab
 from gui.training.rewards_tab import RewardsTab
+from gui.training.trueskills_tab import TrueskillsTab
 from gui.training.win_rates_tab import WinRatesTab
 from main import create_env
 from main import new_training
@@ -129,11 +129,17 @@ class TrainThread(QtCore.QThread):
                         save_path=str(poke_path.agent_dir),
                         name_prefix=poke_path.tag,
                     ),
-                    SavePeripheralsCallback(poke_path=poke_path, save_freq=self.save_freq),
-                    SuccessCallback(agent_dir=poke_path.agent_dir, league_dir=poke_path.league_dir, tag=poke_path.tag),
+                    SavePeripheralsCallback(
+                        poke_path=poke_path, save_freq=self.save_freq
+                    ),
+                    SuccessCallback(
+                        agent_dir=poke_path.agent_dir,
+                        league_dir=poke_path.league_dir,
+                        tag=poke_path.tag,
+                    ),
                     ControllerCallback(self.stop_signal_received),
                 ]
-            )
+            ),
         )
         self.finished_signal.emit()
 

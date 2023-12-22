@@ -1,5 +1,6 @@
 import pathlib
 
+from omegaconf import OmegaConf
 from PyQt5.QtChart import QBarCategoryAxis
 from PyQt5.QtChart import QBarSeries
 from PyQt5.QtChart import QBarSet
@@ -9,7 +10,6 @@ from PyQt5.QtChart import QValueAxis
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
-from omegaconf import OmegaConf
 
 
 class TrueskillsTab(QWidget):
@@ -57,7 +57,9 @@ class TrueskillsTab(QWidget):
             self.x_axis.append(x_data)
             self.y_axis.setRange(0, max(y_data))
 
-    def read_data(self, ):
+    def read_data(
+        self,
+    ):
         try:
             data = OmegaConf.load(self.file_path)
         except FileNotFoundError:

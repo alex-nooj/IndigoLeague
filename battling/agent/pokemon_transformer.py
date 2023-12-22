@@ -61,12 +61,12 @@ class PokemonTransformer(nn.Module):
             (b, s, -1),
         )
         positional_encoding = (
-            torch.linspace(0, 1, s, device=x.device)
-            .view(1, -1, 1)
-            .expand(b, -1, -1)
+            torch.linspace(0, 1, s, device=x.device).view(1, -1, 1).expand(b, -1, -1)
         )
 
         encoded_tensor = torch.cat((positional_encoding, projected_tensor), dim=-1)
         transformer_tensor = self.transformer(encoded_tensor)
-        final_projection = self.second_projection_layer(transformer_tensor.view(-1, transformer_tensor.shape[-1]))
+        final_projection = self.second_projection_layer(
+            transformer_tensor.view(-1, transformer_tensor.shape[-1])
+        )
         return final_projection.view(b, -1)

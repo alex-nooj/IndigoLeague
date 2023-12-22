@@ -21,10 +21,10 @@ def test_embed_moves():
     # Act
     embedded_moves = []
     for i in range(0, len(moves), 4):
-        embedded_moves += op._embed_moves(moves[i:i+4])
+        embedded_moves += op._embed_moves(moves[i : i + 4])
 
     # Assert
-    for ix, embedded_moves in enumerate(embedded_moves[:len(moves)]):
+    for ix, embedded_moves in enumerate(embedded_moves[: len(moves)]):
         assert embedded_moves == ix
 
 

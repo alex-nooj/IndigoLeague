@@ -1,7 +1,9 @@
-from utils.smogon_data import SmogonData
-from poke_env import teambuilder
 import typing
+
 import numpy as np
+from poke_env import teambuilder
+
+from utils.smogon_data import SmogonData
 
 
 class GeneticTeamBuilder(teambuilder.Teambuilder):

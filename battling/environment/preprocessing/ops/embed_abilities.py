@@ -45,7 +45,13 @@ class EmbedAbilities(Op):
         Returns:
             List[float]: The updated observational state.
         """
-        ids = [self.abilities_lut[battle.active_pokemon.ability if battle.active_pokemon.ability else "none"]]
+        ids = [
+            self.abilities_lut[
+                battle.active_pokemon.ability
+                if battle.active_pokemon.ability
+                else "none"
+            ]
+        ]
         if battle.opponent_active_pokemon.ability:
             ids.append(self.abilities_lut[battle.opponent_active_pokemon.ability])
         else:
@@ -70,9 +76,16 @@ class EmbedAbilities(Op):
         return gym.spaces.Dict(
             {
                 self.key: gym.spaces.Box(
-                    np.array([0 for _ in range(self.seq_len * self.n_features)], dtype=np.int64),
                     np.array(
-                        [len(self.abilities_lut) for _ in range(self.seq_len * self.n_features)], dtype=np.int64
+                        [0 for _ in range(self.seq_len * self.n_features)],
+                        dtype=np.int64,
+                    ),
+                    np.array(
+                        [
+                            len(self.abilities_lut)
+                            for _ in range(self.seq_len * self.n_features)
+                        ],
+                        dtype=np.int64,
                     ),
                     dtype=np.int64,
                 )
@@ -86,4 +99,10 @@ class EmbedAbilities(Op):
             Dict[str, Tuple[int, int, int]]: The number of items in the codex, the embedding size, and the number of
                 features
         """
-        return {self.key: (len(self.abilities_lut), self._embedding_size, self.seq_len * self.n_features)}
+        return {
+            self.key: (
+                len(self.abilities_lut),
+                self._embedding_size,
+                self.seq_len * self.n_features,
+            )
+        }

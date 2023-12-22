@@ -21,10 +21,10 @@ def test_embed_abilities():
     # Act
     embedded_abilities = []
     for i in range(0, len(abilities), 6):
-        embedded_abilities += op._embed_abilities(abilities[i:i+6])
+        embedded_abilities += op._embed_abilities(abilities[i : i + 6])
 
     # Assert
-    for ix, embedded_abilities in enumerate(embedded_abilities[:len(abilities)]):
+    for ix, embedded_abilities in enumerate(embedded_abilities[: len(abilities)]):
         assert embedded_abilities == ix
 
 

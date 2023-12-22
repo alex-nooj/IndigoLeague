@@ -1,11 +1,11 @@
 import typing
 
 import gym
+import numpy as np
 import numpy.typing as npt
 from poke_env.environment import AbstractBattle
 
 from battling.environment.preprocessing.op import Op
-import numpy as np
 
 
 def find_prev_move(
@@ -38,23 +38,32 @@ class EmbedPreviousMoves(Op):
             own_prev_move = find_prev_move(
                 self.prev_pokemon,
                 battle.active_pokemon.species,
-                [move.current_pp for move in list(battle.active_pokemon.moves.values())[:4]],
+                [
+                    move.current_pp
+                    for move in list(battle.active_pokemon.moves.values())[:4]
+                ],
                 self.prev_move_pp,
             )
             opp_prev_move = find_prev_move(
                 self.prev_opp_pokemon,
                 battle.opponent_active_pokemon.species,
-                [move.current_pp for move in list(battle.opponent_active_pokemon.moves.values())[:4]],
+                [
+                    move.current_pp
+                    for move in list(battle.opponent_active_pokemon.moves.values())[:4]
+                ],
                 self.prev_opp_move_pp,
             )
         else:
             own_prev_move = [0.0 for _ in range(5)]
             opp_prev_move = [0.0 for _ in range(5)]
         self.prev_pokemon = battle.active_pokemon.species
-        self.prev_move_pp = [move.current_pp for move in list(battle.active_pokemon.moves.values())[:4]]
+        self.prev_move_pp = [
+            move.current_pp for move in list(battle.active_pokemon.moves.values())[:4]
+        ]
         self.opp_prev_pokemon = battle.opponent_active_pokemon.species
         self.opp_prev_move_pp = [
-            move.current_pp for move in list(battle.opponent_active_pokemon.moves.values())[:4]
+            move.current_pp
+            for move in list(battle.opponent_active_pokemon.moves.values())[:4]
         ]
         return own_prev_move + opp_prev_move
 

@@ -1,7 +1,7 @@
 import pathlib
 import typing
-import numpy as np
 
+import numpy as np
 from poke_env.teambuilder.teambuilder import Teambuilder
 
 from utils.smogon_data import SmogonData
@@ -32,7 +32,9 @@ def generate_random_team(team_size: int) -> typing.List[str]:
 
 
 class AgentTeamBuilder(Teambuilder):
-    def __init__(self, battle_format: str, team_size: int, randomize_team: bool = False):
+    def __init__(
+        self, battle_format: str, team_size: int, randomize_team: bool = False
+    ):
         self._team_size = team_size
         if not randomize_team:
             self._team = generate_random_team(6)
@@ -45,7 +47,9 @@ class AgentTeamBuilder(Teambuilder):
 
     def yield_team(self) -> str:
         if self._team:
-            ixs = np.random.choice(list(range(len(self._team))), self._team_size, replace=False)
+            ixs = np.random.choice(
+                list(range(len(self._team))), self._team_size, replace=False
+            )
             team = [self._team[i] for i in ixs]
             return self.join_team(self.parse_showdown_team("\n".join(team)))
         else:

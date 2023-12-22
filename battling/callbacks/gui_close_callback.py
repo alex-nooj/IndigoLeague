@@ -12,7 +12,9 @@ class RunnerCheck:
 
 
 class ControllerCallback(sb3_callbacks.BaseCallback):
-    def __init__(self, continue_running: RunnerCheck, verbose: typing.Optional[int] = 1):
+    def __init__(
+        self, continue_running: RunnerCheck, verbose: typing.Optional[int] = 1
+    ):
         super().__init__(verbose=verbose)
         self.continue_running = continue_running
 

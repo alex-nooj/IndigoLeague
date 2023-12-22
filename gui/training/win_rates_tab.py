@@ -1,5 +1,6 @@
 import pathlib
 
+from omegaconf import OmegaConf
 from PyQt5.QtChart import QBarCategoryAxis
 from PyQt5.QtChart import QBarSeries
 from PyQt5.QtChart import QBarSet
@@ -10,7 +11,6 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QComboBox
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
-from omegaconf import OmegaConf
 
 
 class WinRatesTab(QWidget):
@@ -50,7 +50,9 @@ class WinRatesTab(QWidget):
         self.setLayout(self.layout)
 
     def update_directory_list(self):
-        curr_directory_names = sorted([k.stem for k in self.challengers_dir.iterdir() if k.is_dir()])
+        curr_directory_names = sorted(
+            [k.stem for k in self.challengers_dir.iterdir() if k.is_dir()]
+        )
         curr_text = self.combo_box.currentText()
         self.combo_box.clear()
         self.combo_box.addItems(curr_directory_names)
@@ -78,8 +80,12 @@ class WinRatesTab(QWidget):
             self.x_axis.append(x_data)
             self.y_axis.setRange(0, max(y_data))
 
-    def read_data(self,):
-        file_path = self.challengers_dir / self.combo_box.currentText() / "win_rates.yaml"
+    def read_data(
+        self,
+    ):
+        file_path = (
+            self.challengers_dir / self.combo_box.currentText() / "win_rates.yaml"
+        )
         if file_path is not None and file_path.is_file():
             data = OmegaConf.load(file_path)
         else:

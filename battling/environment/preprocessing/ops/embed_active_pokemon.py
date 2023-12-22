@@ -36,7 +36,8 @@ class EmbedActivePokemon(Op):
         # opponent's types against ours (i.e., opponent attacks us)
         types = [
             damage_helpers.type_multiplier("", poke_type, battle.active_pokemon) / 4.0
-            if poke_type else -1
+            if poke_type
+            else -1
             for poke_type in battle.opponent_active_pokemon.types
         ]
 
@@ -45,8 +46,12 @@ class EmbedActivePokemon(Op):
 
         # Now we measure the damage multiplier of our own types against the opponent
         opp_types = [
-            damage_helpers.type_multiplier("", poke_type, battle.opponent_active_pokemon) / 4.0
-            if poke_type else -1
+            damage_helpers.type_multiplier(
+                "", poke_type, battle.opponent_active_pokemon
+            )
+            / 4.0
+            if poke_type
+            else -1
             for poke_type in battle.active_pokemon.types
         ]
 

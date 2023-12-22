@@ -1,6 +1,7 @@
 import json
 import pathlib
 import typing
+
 import numpy as np
 
 from utils import format_str

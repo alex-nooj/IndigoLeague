@@ -12,6 +12,5 @@ tag, n_steps, poke_path, model, env, team_size = resume_training(
         "hp_value": 0.0,
         "status_value": 0.0,
         "victory_value": 1.0,
-    }
+    },
 )
-

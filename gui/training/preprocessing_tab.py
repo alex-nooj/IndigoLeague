@@ -2,12 +2,10 @@ import typing
 
 from PyQt5 import QtGui
 from PyQt5.QtGui import QIntValidator
-from PyQt5.QtWidgets import (
-    QLineEdit,
-    QCheckBox,
-    QLabel,
-    QFormLayout,
-)
+from PyQt5.QtWidgets import QCheckBox
+from PyQt5.QtWidgets import QFormLayout
+from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QLineEdit
 
 from gui.labelled_frame import PokeWidget
 

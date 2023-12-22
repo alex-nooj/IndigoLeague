@@ -1,9 +1,9 @@
 import collections
 import pathlib
 import typing
-import numpy as np
 
 import gym
+import numpy as np
 import numpy.typing as npt
 import poke_env
 from poke_env import PlayerConfiguration
@@ -12,7 +12,8 @@ from poke_env.environment import Battle
 from poke_env.environment import Effect
 from poke_env.environment import Status
 from poke_env.player import BattleOrder
-from poke_env.player.openai_api import ActionType, ObservationType
+from poke_env.player.openai_api import ActionType
+from poke_env.player.openai_api import ObservationType
 
 from battling.environment.matchmaking.matchmaker import Matchmaker
 from battling.environment.preprocessing.preprocessor import Preprocessor
@@ -132,7 +133,10 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         if battle.active_pokemon is not None:
             for ix, move in enumerate(battle.active_pokemon.moves.values()):
                 if move.id in [m.id for m in battle.available_moves]:
-                    if move.id.lower() == "substitute" and Effect.SUBSTITUTE in  battle.active_pokemon.effects:
+                    if (
+                        move.id.lower() == "substitute"
+                        and Effect.SUBSTITUTE in battle.active_pokemon.effects
+                    ):
                         moves[ix] = 0
                     else:
                         moves[ix] = 1 if move.current_pp != 0 else 0

@@ -1,12 +1,11 @@
 import typing
 
 import gym
+import numpy as np
 from numpy import typing as npt
 from poke_env.environment import AbstractBattle
 
 from battling.environment.preprocessing.op import Op
-import numpy as np
-
 from utils.damage_helpers import calc_move_damage
 
 
@@ -30,7 +29,9 @@ class SimpleOp(Op):
                 move=move,
                 usr=battle.active_pokemon,
                 tgt=battle.opponent_active_pokemon,
-                weather=list(battle.weather.keys())[0] if len(battle.weather) > 0 else None,
+                weather=list(battle.weather.keys())[0]
+                if len(battle.weather) > 0
+                else None,
                 side_conditions=list(battle.opponent_side_conditions.keys()),
             )
 

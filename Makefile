@@ -33,4 +33,3 @@ start:
 run-agent:
 	# Start the Docker container for the agent and execute the given command
 	docker run --rm -it --network $(NETWORK_NAME) -v $(abspath $(MOUNT_DIR)):/workspace/pokemon_league $(AGENT_IMAGE_NAME) $(CMD)
-

@@ -1,9 +1,10 @@
 import asyncio
+import json
 import typing
 
 import numpy as np
 from poke_env.player import SimpleHeuristicsPlayer
-import json
+
 from team_selection.extensive_team_builder import ExtensiveTeamBuilder
 from team_selection.extensive_team_builder import generate_all_pokemon
 from team_selection.genetic_team_builder import GeneticTeamBuilder
@@ -15,12 +16,15 @@ class TeamChanger(SimpleHeuristicsPlayer):
 
 
 async def evaluate_team(
-    player1: TeamChanger, player2: TeamChanger, teams: typing.List[GeneticTeamBuilder], n_battles: int = 20
+    player1: TeamChanger,
+    player2: TeamChanger,
+    teams: typing.List[GeneticTeamBuilder],
+    n_battles: int = 20,
 ) -> typing.List[int]:
     team_scores = [0 for _ in teams]
     for ix_1, team_1 in enumerate(teams[:-1]):
         player1.change_team(team_1)
-        for ix_2, team_2 in enumerate(teams[ix_1+1:]):
+        for ix_2, team_2 in enumerate(teams[ix_1 + 1 :]):
             player2.change_team(team_2)
             await player1.battle_against(player2, n_battles)
             team_scores[ix_1] += player1.n_won_battles
@@ -32,17 +36,21 @@ async def evaluate_team(
 
 async def main(population_size: int, n_mutations: int, battle_format: str, n_gens: int):
     import pathlib
+
     # Step 1: Generate N random teams
-    teams = [GeneticTeamBuilder(mode=np.random.choice(["random", "sample", "teammate"])) for _ in range(population_size)]
+    teams = [
+        GeneticTeamBuilder(mode=np.random.choice(["random", "sample", "teammate"]))
+        for _ in range(population_size)
+    ]
 
     all_mons = generate_all_pokemon()
     mon_names = [m for m in all_mons]
     file1 = pathlib.Path(__file__).parent / "pokemon_list_1.json"
     file2 = pathlib.Path(__file__).parent / "pokemon_list_2.json"
 
-    mons_1 = {k: all_mons[k] for k in mon_names[:len(mon_names)//2]}
+    mons_1 = {k: all_mons[k] for k in mon_names[: len(mon_names) // 2]}
 
-    mons_2 = {k: all_mons[k] for k in mon_names[len(mon_names)//2:]}
+    mons_2 = {k: all_mons[k] for k in mon_names[len(mon_names) // 2 :]}
 
     teambuilder_1 = ExtensiveTeamBuilder(all_mons, file1)
     teambuilder_2 = ExtensiveTeamBuilder(all_mons, file2)

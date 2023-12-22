@@ -7,7 +7,9 @@ from utils import PokePath
 
 
 class SavePeripheralsCallback(sb3_callbacks.BaseCallback):
-    def __init__(self, save_freq: int, poke_path: PokePath, verbose: typing.Optional[int] = 1):
+    def __init__(
+        self, save_freq: int, poke_path: PokePath, verbose: typing.Optional[int] = 1
+    ):
         super().__init__(verbose=verbose)
         self.save_freq = save_freq
         self.poke_path = poke_path
@@ -18,7 +20,7 @@ class SavePeripheralsCallback(sb3_callbacks.BaseCallback):
                 "team": self.training_env.envs[0].env.agent._team,
                 "preprocessor": self.training_env.envs[0].env.preprocessor,
             },
-            self.poke_path.agent_dir / "team.pth"
+            self.poke_path.agent_dir / "team.pth",
         )
 
     def _on_step(self) -> bool:

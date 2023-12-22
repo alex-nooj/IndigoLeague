@@ -16,7 +16,7 @@ def test_embed_mons():
 
     # Act
     for i in range(0, len(mons), 6):
-        _ = op._embed_pokemon_ids(mons[i:i+6])
+        _ = op._embed_pokemon_ids(mons[i : i + 6])
 
     # Assert
     assert True
