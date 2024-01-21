@@ -2,21 +2,19 @@
 battle_format: gen8ou
 total_timesteps: 100_000_000
 save_freq: 50_000
-#resume: /media/alex/USB322FD/pokemon_league/challengers/Lorelei/Lorelei_50000_steps.zip
-starting_team_size: 1
+#resume: /media/alex/USB322FD/pokemon_league/challengers/Karen/team_size_1.zip
+starting_team_size: 6
 
 # Network
 shared:
-  - 256
-  - 256
-  - 256
-  - 128
+  - 32
+  - 32
 
 pi:
-  - 64
+  - 32
 
 vf:
-  - 64
+  - 32
 
 # Preprocessing
 ops:
@@ -24,20 +22,20 @@ ops:
 #    embedding_size: 8
 #  battling.environment.preprocessing.ops.embed_moves.EmbedMoves:
 #    embedding_size: 8
-  battling.environment.preprocessing.ops.embed_abilities.EmbedAbilities:
-    embedding_size: 8
-  battling.environment.preprocessing.ops.embed_active_pokemon.EmbedActivePokemon: {}
-#  battling.environment.preprocessing.ops.simple_op.SimpleOp: {}
-  battling.environment.preprocessing.ops.embed_team.EmbedTeam: {}
-  battling.environment.preprocessing.ops.embed_active_moves.EmbedActiveMoves: {}
+#  battling.environment.preprocessing.ops.embed_abilities.EmbedAbilities:
+#    embedding_size: 8
+#  battling.environment.preprocessing.ops.embed_active_pokemon.EmbedActivePokemon: {}
+  battling.environment.preprocessing.ops.simple_op.SimpleOp: {}
+#  battling.environment.preprocessing.ops.embed_team.EmbedTeam: {}
+#  battling.environment.preprocessing.ops.embed_active_moves.EmbedActiveMoves: {}
 #  battling.environment.preprocessing.ops.embed_previous_moves.EmbedPreviousMoves: {}
-  battling.environment.preprocessing.ops.embed_field.EmbedField: {}
-  battling.environment.preprocessing.ops.embed_items.EmbedItems:
-    embedding_size: 5
+#  battling.environment.preprocessing.ops.embed_field.EmbedField: {}
+#  battling.environment.preprocessing.ops.embed_items.EmbedItems:
+#    embedding_size: 5
 
 # Rewards
 rewards:
   fainted_value: 0.2
-  hp_value: 0.01
+  hp_value: 0.1
   status_value: 0.0
   victory_value: 1.0

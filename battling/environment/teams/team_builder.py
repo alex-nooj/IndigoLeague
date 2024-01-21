@@ -60,3 +60,9 @@ class AgentTeamBuilder(Teambuilder):
     @property
     def team_size(self) -> int:
         return self._team_size
+
+    def save_team(self, save_dir: pathlib.Path):
+        if not self._team:
+            raise RuntimeError("Trying to save team before it is set!")
+        with open(str(save_dir / "team.txt"), "w") as fp:
+            fp.write("".join(self._team))

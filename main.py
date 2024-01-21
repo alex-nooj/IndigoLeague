@@ -12,6 +12,7 @@ from battling.callbacks.curriculum_callback import CurriculumCallback
 from battling.callbacks.save_peripherals_callback import SavePeripheralsCallback
 from battling.callbacks.success_callback import SuccessCallback
 from battling.environment.gen8env import Gen8Env
+from battling.environment.teams.team_builder import AgentTeamBuilder
 
 
 def resume_training(
@@ -64,12 +65,14 @@ def create_env(
     battle_format: str,
     team_size: int,
     tag: typing.Optional[str] = None,
-) -> Gen8Env:
+) -> typing.Tuple[utils.PokePath, Gen8Env]:
     poke_path = utils.PokePath(tag=tag)
     if tag is None:
         tag = poke_path.tag
 
-    return Gen8Env(
+    team = AgentTeamBuilder(battle_format=battle_format, team_size=team_size)
+    team.save_team(poke_path.agent_dir)
+    return poke_path, Gen8Env(
         ops,
         **rewards,
         seq_len=seq_len,
@@ -80,18 +83,19 @@ def create_env(
         team_size=team_size,
         change_opponent=False,
         starting_opponent="SimpleHeuristics",
+        team=team,
     )
 
 
 def new_training(
     env: Gen8Env,
+    poke_path: utils.PokePath,
     seq_len: int,
     shared: typing.List[int],
     pi: typing.List[int],
     vf: typing.List[int],
     tag: typing.Optional[str] = None,
 ) -> typing.Tuple[str, utils.PokePath, BaseAlgorithm]:
-    poke_path = utils.PokePath(tag=tag)
     model = MaskablePPO(
         "MultiInputPolicy",
         env,
@@ -110,7 +114,7 @@ def new_training(
                 dropout=0.0,
             ),
             net_arch=dict(pi=pi, vf=vf),
-            # activation_fn=torch.nn.LeakyReLU,
+            activation_fn=torch.nn.LeakyReLU,
         ),
     )
 
@@ -160,7 +164,7 @@ def main(
         total_timesteps -= n_steps
     else:
         seq_len = 1
-        env = create_env(
+        poke_path, env = create_env(
             ops=ops,
             rewards=rewards,
             seq_len=seq_len,
@@ -168,7 +172,9 @@ def main(
             team_size=starting_team_size,
             tag=tag,
         )
-        tag, poke_path, model = new_training(env, seq_len, shared, pi, vf, tag)
+        tag, poke_path, model = new_training(
+            env, poke_path, seq_len, shared, pi, vf, tag
+        )
 
     checkpoint_callback = sb3_callbacks.CheckpointCallback(
         save_freq,
@@ -213,6 +219,14 @@ def main(
             str(
                 poke_path.agent_dir
                 / f"keyboard_interrupt_{checkpoint_callback.num_timesteps}.zip"
+            )
+        )
+        raise e
+    except RuntimeError as e:
+        model.save(
+            str(
+                poke_path.agent_dir
+                / f"runtime_error_{checkpoint_callback.num_timesteps}.zip"
             )
         )
         raise e
