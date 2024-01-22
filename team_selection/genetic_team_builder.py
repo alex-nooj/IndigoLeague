@@ -42,33 +42,17 @@ class GeneticTeamBuilder(teambuilder.Teambuilder):
         mons.sort()
         self.mons = {mon: self.data.build_pokemon(mon) for mon in mons}
 
-    def mutate(self, team: typing.Dict[str, str]):
-        self.mons = team
-        p = np.asarray([np.exp(self.team_size - x) for x in range(1, self.team_size)])
-        n_mutations = np.random.choice(
-            list(range(1, self.team_size)), p=p / np.sum(p), size=1
-        )[0]
-
-        team_mons = list(
-            np.random.choice(
-                [k for k in self.mons], size=self.team_size - n_mutations, replace=False
-            )
+    def mutate(self, team: typing.Dict[str, str], n_changes: int):
+        survivors = np.random.choice(
+            list(team.keys()), size=len(team.keys()) - n_changes
         )
-        while len(team_mons) != self.team_size:
-            team_mons += np.random.choice(
-                [
-                    self.data.sample_pokemon(),
-                    self.data.sample_teammates(team_mons[-1], size=1, team=team_mons),
-                ]
-            )
-
-        team_mons.sort()
-        new_team = {
-            mon: self.mons[mon] if mon in self.mons else self.data.build_pokemon(mon)
-            for mon in team_mons
-        }
-
-        self.mons = new_team
+        self.mons = {k: v for k, v in team.items() if k in survivors}
+        while len(list(self.mons.keys())) < self.team_size:
+            teammate = np.random.choice(list(team.keys()))
+            new_mon = self.data.sample_teammates(
+                teammate, size=1, team=list(self.mons.keys())
+            )[0]
+            self.mons[new_mon] = self.data.build_pokemon(new_mon)
 
     @property
     def team(self) -> str:

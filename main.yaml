@@ -3,12 +3,13 @@ battle_format: gen8ou
 total_timesteps: 100_000_000
 save_freq: 50_000
 #resume: /media/alex/USB322FD/pokemon_league/challengers/Karen/team_size_1.zip
-starting_team_size: 6
+starting_team_size: 1
 
 # Network
 shared:
-  - 32
-  - 32
+  - 64
+  - 64
+  - 64
 
 pi:
   - 32
@@ -25,7 +26,9 @@ ops:
 #  battling.environment.preprocessing.ops.embed_abilities.EmbedAbilities:
 #    embedding_size: 8
 #  battling.environment.preprocessing.ops.embed_active_pokemon.EmbedActivePokemon: {}
-  battling.environment.preprocessing.ops.simple_op.SimpleOp: {}
+#  battling.environment.preprocessing.ops.simple_op.SimpleOp: {}
+  battling.environment.preprocessing.ops.heuristics_op.HeuristicsOp: { }
+
 #  battling.environment.preprocessing.ops.embed_team.EmbedTeam: {}
 #  battling.environment.preprocessing.ops.embed_active_moves.EmbedActiveMoves: {}
 #  battling.environment.preprocessing.ops.embed_previous_moves.EmbedPreviousMoves: {}

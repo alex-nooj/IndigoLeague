@@ -66,3 +66,6 @@ class AgentTeamBuilder(Teambuilder):
             raise RuntimeError("Trying to save team before it is set!")
         with open(str(save_dir / "team.txt"), "w") as fp:
             fp.write("".join(self._team))
+
+    def set_team(self, team: typing.List[str]):
+        self._team = team

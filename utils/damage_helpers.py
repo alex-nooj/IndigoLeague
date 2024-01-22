@@ -9,15 +9,7 @@ from poke_env.environment.status import Status
 from poke_env.environment.weather import Weather
 
 from utils import format_str
-
-
-def stat_estimation(mon: Pokemon, stat: str) -> float:
-    # Stats boosts value
-    if mon.boosts[stat] > 1:
-        boost = (2 + mon.boosts[stat]) / 2
-    else:
-        boost = 2 / (2 - mon.boosts[stat])
-    return ((2 * mon.base_stats[stat] + 31) + 5) * boost
+from utils.normalize_stats import stat_estimation
 
 
 def attack_defense_ratio(
@@ -93,12 +85,12 @@ def sound_multiplier(
 
 
 def icescales_multiplier(
-    move_category: MoveCategory, tgt_ability: typing.Union[str, None]
+    move_category: MoveCategory, tgt_ability: typing.Optional[str]
 ) -> float:
     if (
         tgt_ability is not None
         and format_str(tgt_ability) == "icescales"
-        and move_category == MoveCategory.Special
+        and move_category == MoveCategory.SPECIAL
     ):
         return 0.5
     else:
@@ -106,7 +98,7 @@ def icescales_multiplier(
 
 
 def normalize_damage(damage: float, hp: float) -> float:
-    return 1 - min((hp - damage), 0) / hp if hp != 0.0 else 0.0
+    return 1 - max((hp - damage), 0) / hp if hp != 0.0 else 1.0
 
 
 def stab_multiplier(usr: Pokemon, move: Move) -> float:
@@ -214,6 +206,8 @@ def calc_move_damage(
     weather: typing.Optional[Weather] = None,
     side_conditions: typing.Optional[typing.List[SideCondition]] = None,
 ) -> float:
+    if side_conditions is None:
+        side_conditions = []
     lvl_mult = level_multiplier(usr.level)
     power = move.base_power
     if power == 0:
@@ -252,7 +246,8 @@ def calc_move_damage(
         * ability_mult
         * item_mult
     )
-    return normalize_damage(damage, usr.current_hp)
+    dmg_normed = normalize_damage(damage, tgt.current_hp)
+    return dmg_normed
 
 
 def embed_moves(
