@@ -4,6 +4,7 @@ import gym
 import numpy as np
 import numpy.typing as npt
 from poke_env.environment import AbstractBattle
+from poke_env.environment import Pokemon
 from poke_env.environment import Status
 
 from battling.environment.preprocessing.op import Op
@@ -15,9 +16,11 @@ class EmbedActivePokemon(Op):
     def __init__(self, seq_len: int):
         super().__init__(
             seq_len=seq_len,
-            n_features=2 * (2 + 8 + len(Status)),
+            n_features=2 * (2 + 1 + 8 + len(Status)),
             key="active_pokemon",
         )
+        self.prev_health = {}
+        self.prev_opp_health = {}
 
     def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
@@ -42,6 +45,18 @@ class EmbedActivePokemon(Op):
         ]
 
         stats = normalize_stats(battle.active_pokemon)
+        if (
+            battle.battle_tag in self.prev_health
+            and battle.active_pokemon.species in self.prev_health[battle.battle_tag]
+        ):
+            prev_health = [
+                self.prev_health[battle.battle_tag][battle.active_pokemon.species]
+            ]
+        else:
+            prev_health = [stats[0]]
+            self.prev_health[battle.battle_tag] = {}
+
+        self.prev_health[battle.battle_tag][battle.active_pokemon.species] = stats[0]
         status = [float(t == battle.active_pokemon.status) for t in Status]
 
         # Now we measure the damage multiplier of our own types against the opponent
@@ -56,9 +71,35 @@ class EmbedActivePokemon(Op):
         ]
 
         opp_stats = normalize_stats(battle.opponent_active_pokemon)
+
+        if (
+            battle.battle_tag in self.prev_opp_health
+            and battle.opponent_active_pokemon.species
+            in self.prev_opp_health[battle.battle_tag]
+        ):
+            prev_opp_health = [
+                self.prev_opp_health[battle.battle_tag][
+                    battle.opponent_active_pokemon.species
+                ]
+            ]
+        else:
+            prev_opp_health = [opp_stats[0]]
+            self.prev_opp_health[battle.battle_tag] = {}
+        self.prev_opp_health[battle.battle_tag][
+            battle.opponent_active_pokemon.species
+        ] = opp_stats[0]
         opp_status = [float(t == battle.opponent_active_pokemon.status) for t in Status]
 
-        return types + stats + status + opp_types + opp_stats + opp_status
+        return (
+            types
+            + prev_health
+            + stats
+            + status
+            + opp_types
+            + prev_opp_health
+            + opp_stats
+            + opp_status
+        )
 
     def describe_embedding(self) -> gym.spaces.Dict:
         """Describes the output of the observation space for this op.
@@ -75,3 +116,7 @@ class EmbedActivePokemon(Op):
                 )
             }
         )
+
+    def _reset(self):
+        self.prev_health = {}
+        self.prev_opp_health = {}

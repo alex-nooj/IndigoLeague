@@ -122,7 +122,7 @@
   "marowak-alola": ["poweruppunch", "curse"],
   "ninetalesalola": ["frostbreath", "reflect", "painsplit", "healbell"],
   "mamoswine": ["detect"],
-  "blastoise": ["curse", "bubblebeam", "doubleedge", "defensecurl", "block"],
+  "blastoise": ["curse", "bubblebeam", "doubleedge", "defensecurl", "block", "followme", "dynamicpunch"],
   "charizard": ["tailwind", "toxic", "reflect", "double-edge", "quickattack", "sandstorm", "skullbash", "submission"],
   "cloyster": ["teleport", "doubleedge", "frostbreath", "reflect"],
   "nidoking": ["detect"],

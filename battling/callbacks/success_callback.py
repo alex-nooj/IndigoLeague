@@ -18,7 +18,7 @@ class SuccessCallback(sb3_callbacks.BaseCallback):
         self._league_dir = league_dir
         self._tag = tag
         # Add 3 for the number of scripted agents
-        self._n_league_agents = len([d for d in league_dir.iterdir() if d.is_dir()]) + 3
+        self._n_league_agents = len([d for d in league_dir.iterdir() if d.is_dir()]) + 1
         self._next_step = False
 
     def _on_step(self) -> bool:

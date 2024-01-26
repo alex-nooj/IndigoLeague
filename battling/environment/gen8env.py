@@ -48,7 +48,6 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
 
         if team is None:
             team = AgentTeamBuilder(battle_format=battle_format, team_size=team_size)
-
         self.matchmaker = Matchmaker(
             tag=tag.rsplit(" ")[0],
             league_path=league_path,

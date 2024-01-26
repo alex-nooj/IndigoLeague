@@ -72,7 +72,7 @@ class TransformerFeatureExtractor(BaseFeaturesExtractor):
                     PokemonTransformer(
                         input_size,
                         64,
-                        512,
+                        128,
                         seq_len,
                         n_encoders,
                         n_heads,

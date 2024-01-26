@@ -1,6 +1,5 @@
 import pathlib
 import typing
-from collections import deque
 
 import numpy as np
 import poke_env
@@ -8,7 +7,7 @@ import torch
 import trueskill
 from omegaconf import OmegaConf
 from poke_env.player import Player
-from stable_baselines3 import PPO
+from sb3_contrib import MaskablePPO
 
 from battling.environment.opponent_player import OpponentPlayer
 from battling.environment.teams.team_builder import AgentTeamBuilder
@@ -140,7 +139,7 @@ class Matchmaker:
             )
         else:
             agent_path = self._league_path / opponent_tag
-            model = PPO.load(agent_path / "network.zip")
+            model = MaskablePPO.load(agent_path / "network.zip")
             peripherals = torch.load(agent_path / "team.pth")
             return OpponentPlayer(
                 model=model,
