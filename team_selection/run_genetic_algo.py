@@ -36,7 +36,7 @@ async def evaluate_team(
 
 async def genetic_team_search(
     population_size: int, n_mutations: int, battle_format: str, n_gens: int
-) -> GeneticTeamBuilder:
+) -> AgentTeamBuilder:
     # Step 1: Generate N random teams
     teams = [
         GeneticTeamBuilder(mode=np.random.choice(["random", "sample", "teammate"]))
@@ -75,7 +75,7 @@ async def genetic_team_search(
     print(teams[-1].team)
     team = AgentTeamBuilder(battle_format, 6)
     team.set_team(list(teams[-1].mons_dict.values()))
-    return teams[-1]
+    return team
 
 
 if __name__ == "__main__":

@@ -177,6 +177,14 @@ class TestCalcMoveDamage:
         tgt._ability = "flashfire"
         assert damage_helpers.calc_move_damage(move, usr, tgt, None, None) == 0.0
 
+    @pytest.mark.parametrize(
+        "usr,tgt,move",
+        [(Pokemon(species="alakazam"), Pokemon(species="tyranitar"), Move("psychic"))],
+    )
+    def test_immunities(self, usr: Pokemon, tgt: Pokemon, move: Move):
+        tgt._current_hp = 128.0
+        assert damage_helpers.calc_move_damage(move, usr, tgt, None, None) == 0.0
+
 
 def test_embed_moves():
     pass

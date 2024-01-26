@@ -2,13 +2,14 @@
 battle_format: gen8ou
 total_timesteps: 100_000_000
 save_freq: 50_000
-#resume: /media/alex/USB322FD/pokemon_league/challengers/Karen/team_size_1.zip
+#resume: /media/alex/USB322FD/pokemon_league/challengers/Misty/runtime_error_141009.zip
 starting_team_size: 1
 
 # Network
 shared:
-  - 64
-  - 64
+  - 128
+  - 128
+  - 128
   - 64
 
 pi:
@@ -32,7 +33,7 @@ ops:
 #  battling.environment.preprocessing.ops.embed_team.EmbedTeam: {}
 #  battling.environment.preprocessing.ops.embed_active_moves.EmbedActiveMoves: {}
 #  battling.environment.preprocessing.ops.embed_previous_moves.EmbedPreviousMoves: {}
-#  battling.environment.preprocessing.ops.embed_field.EmbedField: {}
+  battling.environment.preprocessing.ops.embed_field.EmbedField: {}
 #  battling.environment.preprocessing.ops.embed_items.EmbedItems:
 #    embedding_size: 5
 

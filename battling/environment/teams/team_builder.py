@@ -69,3 +69,7 @@ class AgentTeamBuilder(Teambuilder):
 
     def set_team(self, team: typing.List[str]):
         self._team = team
+
+    @property
+    def team(self) -> typing.Optional[typing.List[str]]:
+        return self._team

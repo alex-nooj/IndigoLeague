@@ -1,4 +1,5 @@
 import asyncio
+import typing
 
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
@@ -55,14 +56,16 @@ class TeamTab(QtWidgets.QWidget):
     def __init__(
         self,
         battle_format_box: QComboBox,
+        team_publisher: typing.Callable[[AgentTeamBuilder], None],
         population_size: int = 50,
         n_mutations: int = 30,
         n_gens: int = 1,
     ):
         super().__init__()
+        self.team_publisher = team_publisher
+
         left_box = QtWidgets.QHBoxLayout(self)
         left_layout = QFormLayout()
-
         self.population_size_line_edit = QLineEdit()
         self.population_size_line_edit.setValidator(QIntValidator())
         self.population_size_line_edit.setText(str(population_size))
@@ -102,6 +105,7 @@ class TeamTab(QtWidgets.QWidget):
         left_box.addWidget(self.results_textbox)
         self.setFixedWidth(1000)
         self.search_thread = None
+        self._team = None
 
     def start_search(self):
         if self.search_thread is None:
@@ -121,4 +125,6 @@ class TeamTab(QtWidgets.QWidget):
 
     def set_team(self, team: AgentTeamBuilder):
         self._team = team
+        self.team_publisher(team)
         self.search_thread = None
+        self.results_textbox.setText("\n".join(self._team.team))

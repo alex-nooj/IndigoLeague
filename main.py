@@ -20,13 +20,13 @@ def resume_training(
     resume_path: pathlib.Path,
     battle_format: str,
     rewards: typing.Dict[str, float],
-) -> typing.Tuple[str, int, utils.PokePath, MaskablePPO, Gen8Env, int]:
+) -> typing.Tuple[utils.PokePath, MaskablePPO, Gen8Env, int]:
     try:
-        tag, n_steps, _ = resume_path.stem.rsplit("_")
-        n_steps = int(n_steps)
+        tag, _, _ = resume_path.stem.rsplit("_")
+        if tag == "runtime":
+            tag = resume_path.parent.stem
     except ValueError:
         tag = resume_path.parent.stem
-        n_steps = int(resume_path.stem.rsplit("_")[-1].rsplit(".")[0])
 
     poke_path = utils.PokePath(tag=tag)
     print(resume_path)
@@ -56,7 +56,7 @@ def resume_training(
         verbose=1,
         tensorboard_log=str(poke_path.agent_dir),
     )
-    return tag, n_steps, poke_path, model, env, team.team_size
+    return poke_path, model, env, team.team_size
 
 
 def setup(
@@ -71,56 +71,50 @@ def setup(
     poke_path: utils.PokePath,
     team: typing.Optional[AgentTeamBuilder],
     tag: str,
-    resume: typing.Optional[str],
 ):
-    if resume is not None and pathlib.Path(resume).is_file():
-        tag, n_steps, poke_path, model, env, starting_team_size = resume_training(
-            pathlib.Path(resume), battle_format, rewards
+    if tag is None:
+        tag = poke_path.tag
+    if team is None:
+        team = asyncio.get_event_loop().run_until_complete(
+            genetic_team_search(100, 1, battle_format, 1)
         )
-    else:
-        if tag is None:
-            tag = poke_path.tag
-        if team is None:
-            team = asyncio.get_event_loop().run_until_complete(
-                genetic_team_search(50, 1, battle_format, 1)
-            )
-        team.save_team(poke_path.agent_dir)
+    team.save_team(poke_path.agent_dir)
 
-        env = Gen8Env(
-            ops,
-            **rewards,
-            seq_len=seq_len,
-            tag=tag,
-            league_path=poke_path.league_dir,
-            battle_format=battle_format,
-            start_challenging=True,
-            team_size=starting_team_size,
-            change_opponent=False,
-            starting_opponent="SimpleHeuristics",
-            team=team,
-        )
+    env = Gen8Env(
+        ops,
+        **rewards,
+        seq_len=seq_len,
+        tag=tag,
+        league_path=poke_path.league_dir,
+        battle_format=battle_format,
+        start_challenging=True,
+        team_size=starting_team_size,
+        change_opponent=False,
+        starting_opponent="SimpleHeuristics",
+        team=team,
+    )
 
-        model = MaskablePPO(
-            "MultiInputPolicy",
-            env,
-            verbose=1,
-            tensorboard_log=str(poke_path.agent_dir),
-            policy_kwargs=dict(
-                features_extractor_class=TransformerFeatureExtractor,
-                features_extractor_kwargs=dict(
-                    embedding_infos=env.preprocessor.embedding_infos(),
-                    seq_len=seq_len,
-                    n_linear_layers=1,
-                    n_encoders=3,
-                    shared=shared,
-                    n_heads=8,
-                    d_feedforward=1024,
-                    dropout=0.0,
-                ),
-                net_arch=dict(pi=pi, vf=vf),
-                activation_fn=torch.nn.LeakyReLU,
+    model = MaskablePPO(
+        "MultiInputPolicy",
+        env,
+        verbose=1,
+        tensorboard_log=str(poke_path.agent_dir),
+        policy_kwargs=dict(
+            features_extractor_class=TransformerFeatureExtractor,
+            features_extractor_kwargs=dict(
+                embedding_infos=env.preprocessor.embedding_infos(),
+                seq_len=seq_len,
+                n_linear_layers=1,
+                n_encoders=3,
+                shared=shared,
+                n_heads=8,
+                d_feedforward=1024,
+                dropout=0.0,
             ),
-        )
+            net_arch=dict(pi=pi, vf=vf),
+            activation_fn=torch.nn.LeakyReLU,
+        ),
+    )
 
     return env, model
 
@@ -211,22 +205,26 @@ def main(
     resume: typing.Optional[str] = None,
     callbacks: sb3_callbacks.CallbackList = None,
 ):
-    poke_path = utils.PokePath(tag=tag)
+    if resume is not None and pathlib.Path(resume).is_file():
+        poke_path, model, env, starting_team_size = resume_training(
+            pathlib.Path(resume), battle_format, rewards
+        )
+    else:
+        poke_path = utils.PokePath(tag=tag)
 
-    env, model = setup(
-        ops,
-        rewards,
-        battle_format,
-        1,
-        shared,
-        pi,
-        vf,
-        starting_team_size,
-        poke_path,
-        None,
-        tag,
-        resume,
-    )
+        env, model = setup(
+            ops,
+            rewards,
+            battle_format,
+            1,
+            shared,
+            pi,
+            vf,
+            starting_team_size,
+            poke_path,
+            None,
+            tag,
+        )
 
     train(
         env,
@@ -236,7 +234,7 @@ def main(
         total_timesteps,
         save_freq,
         poke_path,
-        tag,
+        poke_path.tag,
         callbacks=callbacks,
     )
 
