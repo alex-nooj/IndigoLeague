@@ -79,6 +79,4 @@ async def genetic_team_search(
 
 
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(
-        genetic_team_search(50, 30, "gen8ou", 5)
-    )
+    asyncio.get_event_loop().run_until_complete(genetic_team_search(10, 5, "gen8ou", 5))
