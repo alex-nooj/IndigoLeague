@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import QTextEdit
 
 from battling.callbacks.gui_close_callback import RunnerCheck
 from battling.environment.teams.team_builder import AgentTeamBuilder
+from gui.tab_base import TabBase
 from team_selection.run_genetic_algo import genetic_team_search
 
 
@@ -52,17 +53,15 @@ class GeneticSearchThread(QtCore.QThread):
         self.result_signal.emit(AgentTeamBuilder(self.battle_format, 6))
 
 
-class TeamTab(QtWidgets.QWidget):
+class TeamTab(TabBase):
     def __init__(
         self,
         battle_format_box: QComboBox,
-        team_publisher: typing.Callable[[AgentTeamBuilder], None],
         population_size: int = 50,
         n_mutations: int = 30,
         n_gens: int = 1,
     ):
         super().__init__()
-        self.team_publisher = team_publisher
 
         left_box = QtWidgets.QHBoxLayout(self)
         left_layout = QFormLayout()
@@ -98,8 +97,8 @@ class TeamTab(QtWidgets.QWidget):
         left_layout.addWidget(run_button)
 
         self.results_textbox = QTextEdit(self)
+        self.results_textbox.setReadOnly(True)
         self.results_textbox.setFixedWidth(500)
-        # self.results_textbox.setGeometry(300, 20, 280, 340)
 
         left_box.addLayout(left_layout)
         left_box.addWidget(self.results_textbox)
@@ -125,6 +124,8 @@ class TeamTab(QtWidgets.QWidget):
 
     def set_team(self, team: AgentTeamBuilder):
         self._team = team
-        self.team_publisher(team)
         self.search_thread = None
         self.results_textbox.setText("\n".join(self._team.team))
+
+    def on_train(self) -> typing.Dict[str, AgentTeamBuilder]:
+        return {"team": self._team}

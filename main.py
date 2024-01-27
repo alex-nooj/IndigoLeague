@@ -72,12 +72,11 @@ def setup(
     team: typing.Optional[AgentTeamBuilder],
     tag: str,
 ):
-    if tag is None:
-        tag = poke_path.tag
     if team is None:
-        team = asyncio.get_event_loop().run_until_complete(
-            genetic_team_search(100, 1, battle_format, 1)
-        )
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        team = loop.run_until_complete(genetic_team_search(50, 0, battle_format, 1))
     team.save_team(poke_path.agent_dir)
 
     env = Gen8Env(
@@ -223,7 +222,7 @@ def main(
             starting_team_size,
             poke_path,
             None,
-            tag,
+            poke_path.tag,
         )
 
     train(

@@ -20,3 +20,6 @@ class ControllerCallback(sb3_callbacks.BaseCallback):
 
     def _on_step(self) -> bool:
         return self.continue_running.continue_running
+
+    def send_stop_signal(self):
+        self.continue_running.continue_running = False

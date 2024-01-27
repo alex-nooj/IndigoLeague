@@ -2,7 +2,7 @@
 battle_format: gen8ou
 total_timesteps: 100_000_000
 save_freq: 50_000
-#resume: /media/alex/USB322FD/pokemon_league/challengers/Misty/runtime_error_141009.zip
+#resume: /media/alex/USB322FD/pokemon_league/challengers/Green/runtime_error_222166.zip
 starting_team_size: 1
 
 # Network
@@ -28,7 +28,7 @@ ops:
 #    embedding_size: 8
 #  battling.environment.preprocessing.ops.embed_active_pokemon.EmbedActivePokemon: {}
 #  battling.environment.preprocessing.ops.simple_op.SimpleOp: {}
-  battling.environment.preprocessing.ops.heuristics_op.HeuristicsOp: { }
+  battling.environment.preprocessing.ops.heuristics_op.HeuristicsOp: {}
 
 #  battling.environment.preprocessing.ops.embed_team.EmbedTeam: {}
 #  battling.environment.preprocessing.ops.embed_active_moves.EmbedActiveMoves: {}

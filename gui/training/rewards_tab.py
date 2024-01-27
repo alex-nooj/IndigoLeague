@@ -42,8 +42,10 @@ class RewardsTab(PokeWidget):
             main_layout.addRow(checkbox, text)
         self.setFixedWidth(300)
 
-    def start_training(self) -> typing.Dict[str, float]:
+    def start_training(self) -> typing.Dict[str, typing.Dict[str, float]]:
         return {
-            k: float(v["text"].text()) if v["checkbox"].isChecked() else 0.0
-            for k, v in self.reward_funcs.items()
+            "rewards": {
+                k: float(v["text"].text()) if v["checkbox"].isChecked() else 0.0
+                for k, v in self.reward_funcs.items()
+            }
         }

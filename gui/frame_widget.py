@@ -1,5 +1,6 @@
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
 
 
 def frame_widget(
@@ -31,5 +32,5 @@ def frame_widget(
         frame.setFixedWidth(widget_box.sizeHint().width())
     elif fixed_height:
         frame.setFixedHeight(widget_box.sizeHint().height())
-
+    frame.layout().setAlignment(Qt.AlignTop)
     return frame

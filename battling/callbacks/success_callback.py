@@ -2,7 +2,7 @@ import pathlib
 
 import stable_baselines3.common.callbacks as sb3_callbacks
 import torch
-from omegaconf import OmegaConf
+import yaml
 
 
 class SuccessCallback(sb3_callbacks.BaseCallback):
@@ -29,15 +29,12 @@ class SuccessCallback(sb3_callbacks.BaseCallback):
                 total_wins = sum(win_rate)
                 self.logger.record(f"win_rates/{agent}", total_wins)
                 league_agents_beat.append(total_wins > (win_rate.maxlen / 2))
-            OmegaConf.save(
-                config=OmegaConf.create(
-                    {
-                        k: sum(v)
-                        for k, v in self.training_env.envs[0].env.win_rates.items()
-                    }
-                ),
-                f=(self._agent_dir / "win_rates.yaml"),
-            )
+            with open(self._agent_dir / "win_rates.yaml", "w") as fp:
+                win_rates = {
+                    str(k): sum(v)
+                    for k, v in self.training_env.envs[0].env.win_rates.items()
+                }
+                yaml.dump(win_rates, fp)
             self.logger.record(
                 f"trueskill/mu",
                 self.training_env.envs[0]

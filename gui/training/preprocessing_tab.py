@@ -21,6 +21,7 @@ NONEMBEDDING_PROC = [
     "Simple Op",
     "Embed Team",
     "Embed Field",
+    "Heuristics Op",
 ]
 
 
@@ -60,7 +61,9 @@ class PreprocessingTab(PokeWidget):
             main_layout.addRow(checkbox, text)
         self.setFixedWidth(300)
 
-    def start_training(self) -> typing.Dict[str, typing.Dict[str, int]]:
+    def start_training(
+        self,
+    ) -> typing.Dict[str, typing.Dict[str, typing.Dict[str, int]]]:
         ret_dict = {}
         for k, v in self.preprocessors.items():
             if v["checkbox"].isChecked():
@@ -69,4 +72,4 @@ class PreprocessingTab(PokeWidget):
                     if len(v["text"].text()) > 0
                     else {}
                 )
-        return ret_dict
+        return {"ops": ret_dict}
