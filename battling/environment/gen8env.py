@@ -1,6 +1,8 @@
 import collections
+import logging
 import pathlib
 import typing
+from logging.handlers import RotatingFileHandler
 
 import gym
 import numpy as np
@@ -39,6 +41,7 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         team: typing.Optional[AgentTeamBuilder] = None,
         change_opponent: bool = False,
         starting_opponent: str = "RandomPlayer",
+        log_file: pathlib.Path = None,
         **kwargs,
     ):
         if isinstance(ops, Preprocessor):
@@ -77,6 +80,18 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         self.tag = tag.rsplit(" ")[0]
         self._debug_n_steps = 0
 
+        handler = RotatingFileHandler(
+            log_file if log_file is not None else "/tmp/pokemon.log",
+            maxBytes=1024 * 1024 * 5,
+            backupCount=3,
+        )
+        logging.basicConfig(
+            encoding="utf-8",
+            level=logging.DEBUG,
+            handlers=[handler],
+            format="%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s - %(lineno)d - %(message)s",
+        )
+
     def calc_reward(self, last_battle, current_battle) -> float:
         return self.reward_computing_helper(current_battle, **self._reward_values)
 
@@ -92,13 +107,16 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         typing.Tuple[ObservationType, float, bool, bool, dict],
         typing.Tuple[ObservationType, float, bool, dict],
     ]:
+        logging.debug(f"Action: {action}")
         obs, reward, done, info = super().step(action=action)
-
+        logging.debug(f"Obs: {obs}")
+        logging.debug(f"Reward: {reward}")
+        logging.debug(f"Done: {done}")
         self._debug_n_steps += 1
         if self._debug_n_steps > 500:
-            raise RuntimeError(
-                f"Actions are not being reported to server (steps since reset: {self._debug_n_steps})"
-            )
+            error_msg = f"Actions are not being reported to server (steps since reset: {self._debug_n_steps})"
+            logging.error(error_msg)
+            raise RuntimeError(error_msg)
         if done:
             # Track the rolling win/loss rate against each opponent
             if self._opp_tag not in self.win_rates:
@@ -140,24 +158,34 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
                     else:
                         moves[ix] = 1 if move.current_pp != 0 else 0
         team = np.zeros(6)
-        team_mon_names = list(battle.team.keys())
-
-        for ix, mon in enumerate(team_mon_names):
-            team[ix] = int(
-                battle.team[mon].status != Status.FNT and not battle.team[mon].active
-            )
-        return np.concatenate([moves, team])
+        if len(battle.available_switches) > 0:
+            team_mon_names = list(battle.team.keys())
+            for ix, mon in enumerate(team_mon_names):
+                team[ix] = int(
+                    battle.team[mon].status != Status.FNT
+                    and not battle.team[mon].active
+                )
+        mask = np.concatenate([moves, team])
+        logging.debug(f"Mask: {mask}")
+        return mask
 
     def action_to_move(self, action: int, battle: Battle) -> BattleOrder:
         action_mask = self.action_masks()
         if action_mask[action]:
             if action < 4:
+                logging.debug(
+                    f"Action {action} interpreted as a move ({list(battle.active_pokemon.moves.keys())[action]}"
+                )
                 return self.agent.create_order(
                     list(battle.active_pokemon.moves.values())[action]
                 )
             else:
+                logging.debug(
+                    f"Action {action} interpreted as a switch ({list(battle.team.values())[action - 4]}"
+                )
                 return self.agent.create_order(list(battle.team.values())[action - 4])
         else:
+            logging.debug(f"Had to choose random action (given {action})")
             return self.agent.choose_random_move(battle)
 
     def set_team_size(self, team_size: int):

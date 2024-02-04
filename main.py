@@ -21,13 +21,8 @@ def resume_training(
     battle_format: str,
     rewards: typing.Dict[str, float],
 ) -> typing.Tuple[utils.PokePath, MaskablePPO, Gen8Env, int]:
-    try:
-        tag, _, _ = resume_path.stem.rsplit("_")
-        if tag == "runtime":
-            tag = resume_path.parent.stem
-    except ValueError:
-        tag = resume_path.parent.stem
 
+    tag = resume_path.parent.stem
     poke_path = utils.PokePath(tag=tag)
     print(resume_path)
     team_file = resume_path.parent / "team.pth"
@@ -48,6 +43,7 @@ def resume_training(
         change_opponent=False,
         starting_opponent="SimpleHeuristics",
         seq_len=1,
+        log_file=poke_path.agent_dir / f"{tag.lower()}.log",
     )
 
     model = MaskablePPO.load(
@@ -76,7 +72,7 @@ def setup(
         tag = poke_path.tag
     if team is None:
         team = asyncio.get_event_loop().run_until_complete(
-            genetic_team_search(100, 1, battle_format, 1)
+            genetic_team_search(20, 1, battle_format, 1)
         )
     team.save_team(poke_path.agent_dir)
 
@@ -92,6 +88,7 @@ def setup(
         change_opponent=False,
         starting_opponent="SimpleHeuristics",
         team=team,
+        log_file=poke_path.agent_dir / f"{poke_path.tag}.log",
     )
 
     model = MaskablePPO(

@@ -2,8 +2,8 @@
 battle_format: gen8ou
 total_timesteps: 100_000_000
 save_freq: 50_000
-#resume: /media/alex/USB322FD/pokemon_league/challengers/Misty/runtime_error_141009.zip
-starting_team_size: 1
+resume: /media/alex/USB322FD/pokemon_league/challengers/Erika/runtime_error_444784.zip
+starting_team_size: 6
 
 # Network
 shared:
