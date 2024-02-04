@@ -17,6 +17,7 @@ from poke_env.player import BattleOrder
 from poke_env.player.openai_api import ActionType
 from poke_env.player.openai_api import ObservationType
 
+from battling.environment.league_opponent import LeagueOpponent
 from battling.environment.matchmaking.matchmaker import Matchmaker
 from battling.environment.preprocessing.preprocessor import Preprocessor
 from battling.environment.teams.team_builder import AgentTeamBuilder
@@ -57,15 +58,26 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
             battle_format=battle_format,
             team_size=team_size,
         )
+        self.team_size = team_size
         self.win_rates = {}
         self.change_opponent = change_opponent
         self._opp_tag = starting_opponent
         self._next_tag = starting_opponent
+        self.league_opp = LeagueOpponent(
+            starting_opponent=self._opp_tag,
+            league_path=league_path,
+            battle_format=battle_format,
+            team_size=team_size,
+            change_players=change_opponent,
+        )
+        self.league_opp.load_player(self._next_tag)
+        self.league_opp.next_player()
+
         super().__init__(
             battle_format=battle_format,
             team=team,
             player_configuration=PlayerConfiguration(tag, None),
-            opponent=self.matchmaker.load_player(starting_opponent),
+            opponent=self.league_opp,
             *args,
             **kwargs,
         )
@@ -85,12 +97,12 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
             maxBytes=1024 * 1024 * 5,
             backupCount=3,
         )
-        logging.basicConfig(
-            encoding="utf-8",
-            level=logging.DEBUG,
-            handlers=[handler],
-            format="%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s - %(lineno)d - %(message)s",
-        )
+        # logging.basicConfig(
+        #     encoding="utf-8",
+        #     level=logging.DEBUG,
+        #     handlers=[handler],
+        #     format="%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s - %(lineno)d - %(message)s",
+        # )
 
     def calc_reward(self, last_battle, current_battle) -> float:
         return self.reward_computing_helper(current_battle, **self._reward_values)
@@ -107,15 +119,15 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         typing.Tuple[ObservationType, float, bool, bool, dict],
         typing.Tuple[ObservationType, float, bool, dict],
     ]:
-        logging.debug(f"Action: {action}")
+        # logging.debug(f"Action: {action}")
         obs, reward, done, info = super().step(action=action)
-        logging.debug(f"Obs: {obs}")
-        logging.debug(f"Reward: {reward}")
-        logging.debug(f"Done: {done}")
+        # logging.debug(f"Obs: {obs}")
+        # logging.debug(f"Reward: {reward}")
+        # logging.debug(f"Done: {done}")
         self._debug_n_steps += 1
         if self._debug_n_steps > 500:
             error_msg = f"Actions are not being reported to server (steps since reset: {self._debug_n_steps})"
-            logging.error(error_msg)
+            # logging.error(error_msg)
             raise RuntimeError(error_msg)
         if done:
             # Track the rolling win/loss rate against each opponent
@@ -125,13 +137,13 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
 
             # Update the skill ratings and choose our next opponent
             if self.change_opponent:
-                next_tag, player = self.matchmaker.update_and_choose(
+                next_tag = self.matchmaker.update_and_choose(
                     self._opp_tag, self.current_battle.won
                 )
                 self._opp_tag = self._next_tag
-                if next_tag != self._next_tag:
-                    self._next_tag = next_tag
-                    self.set_opponent(player)
+                self._next_tag = next_tag
+                self.league_opp.load_player(next_tag)
+                self.league_opp.next_player()
 
             else:
                 self.matchmaker.update(self._opp_tag, self.current_battle.won)
@@ -166,30 +178,31 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
                     and not battle.team[mon].active
                 )
         mask = np.concatenate([moves, team])
-        logging.debug(f"Mask: {mask}")
+        # logging.debug(f"Mask: {mask}")
         return mask
 
     def action_to_move(self, action: int, battle: Battle) -> BattleOrder:
         action_mask = self.action_masks()
         if action_mask[action]:
             if action < 4:
-                logging.debug(
-                    f"Action {action} interpreted as a move ({list(battle.active_pokemon.moves.keys())[action]}"
-                )
+                # logging.debug(
+                #     f"Action {action} interpreted as a move ({list(battle.active_pokemon.moves.keys())[action]}"
+                # )
                 return self.agent.create_order(
                     list(battle.active_pokemon.moves.values())[action]
                 )
             else:
-                logging.debug(
-                    f"Action {action} interpreted as a switch ({list(battle.team.values())[action - 4]}"
-                )
+                # logging.debug(
+                #     f"Action {action} interpreted as a switch ({list(battle.team.values())[action - 4]}"
+                # )
                 return self.agent.create_order(list(battle.team.values())[action - 4])
         else:
-            logging.debug(f"Had to choose random action (given {action})")
+            # logging.debug(f"Had to choose random action (given {action})")
             return self.agent.choose_random_move(battle)
 
     def set_team_size(self, team_size: int):
+        self.team_size = team_size
         self.agent._team.set_team_size(team_size)
         self.matchmaker.set_team_size(team_size)
-        self._opponent._team.set_team_size(team_size)
+        self.league_opp.set_team_size(team_size)
         self.win_rates = {}

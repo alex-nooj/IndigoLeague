@@ -72,7 +72,7 @@ def setup(
         tag = poke_path.tag
     if team is None:
         team = asyncio.get_event_loop().run_until_complete(
-            genetic_team_search(20, 1, battle_format, 1)
+            genetic_team_search(5, 1, battle_format, 1)
         )
     team.save_team(poke_path.agent_dir)
 

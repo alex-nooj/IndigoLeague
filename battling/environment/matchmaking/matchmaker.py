@@ -25,10 +25,10 @@ class Matchmaker:
 
         self._load_league_skills()
 
-    def choose(self) -> typing.Tuple[str, poke_env.player.Player]:
+    def choose(self) -> str:
         opponent_tag = self._choose_trueskill()
-        player = self.load_player(opponent_tag)
-        return opponent_tag, player
+        # player = self.load_player(opponent_tag)
+        return opponent_tag
 
     def update(self, opponent: str, battle_won: bool):
         if battle_won:
@@ -36,9 +36,7 @@ class Matchmaker:
         else:
             self._update(opponent, self._tag)
 
-    def update_and_choose(
-        self, opponent: str, battle_won: bool
-    ) -> typing.Tuple[str, poke_env.player.Player]:
+    def update_and_choose(self, opponent: str, battle_won: bool) -> str:
         self.update(opponent, battle_won)
 
         return self.choose()
