@@ -2,7 +2,7 @@
 battle_format: gen8ou
 total_timesteps: 100_000_000
 save_freq: 50_000
-resume: /media/alex/USB322FD/pokemon_league/challengers/Giovanni/runtime_error_17600.zip
+#resume: /media/alex/USB322FD/pokemon_league/challengers/Giovanni/Giovanni_217600_steps.zip
 starting_team_size: 1
 team: /media/alex/USB322FD/pokemon_league/team.txt
 
@@ -36,6 +36,7 @@ ops:
   battling.environment.preprocessing.ops.embed_field.EmbedField: {}
 #  battling.environment.preprocessing.ops.embed_items.EmbedItems:
 #    embedding_size: 5
+  battling.environment.preprocessing.ops.embed_active_idx.EmbedActiveIdx: {}
 
 # Rewards
 rewards:
