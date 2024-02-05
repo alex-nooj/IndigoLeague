@@ -18,6 +18,7 @@ from poke_env.player.openai_api import ObservationType
 from battling.environment.matchmaking.matchmaker import Matchmaker
 from battling.environment.preprocessing.preprocessor import Preprocessor
 from battling.environment.teams.team_builder import AgentTeamBuilder
+from utils.load_player import load_player
 
 
 class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
@@ -62,7 +63,12 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
             battle_format=battle_format,
             team=team,
             player_configuration=PlayerConfiguration(tag, None),
-            opponent=self.matchmaker.load_player(starting_opponent),
+            opponent=load_player(
+                tag=starting_opponent,
+                league_path=league_path,
+                battle_format=battle_format,
+                team_size=team_size,
+            ),
             *args,
             **kwargs,
         )
@@ -140,12 +146,14 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
                     else:
                         moves[ix] = 1 if move.current_pp != 0 else 0
         team = np.zeros(6)
-        team_mon_names = list(battle.team.keys())
+        if len(battle.available_switches) > 0:
+            team_mon_names = list(battle.team.keys())
 
-        for ix, mon in enumerate(team_mon_names):
-            team[ix] = int(
-                battle.team[mon].status != Status.FNT and not battle.team[mon].active
-            )
+            for ix, mon in enumerate(team_mon_names):
+                team[ix] = int(
+                    battle.team[mon].status != Status.FNT
+                    and not battle.team[mon].active
+                )
         return np.concatenate([moves, team])
 
     def action_to_move(self, action: int, battle: Battle) -> BattleOrder:

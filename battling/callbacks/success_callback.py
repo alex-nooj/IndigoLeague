@@ -28,7 +28,7 @@ class SuccessCallback(sb3_callbacks.BaseCallback):
             for agent, win_rate in self.training_env.envs[0].env.win_rates.items():
                 total_wins = sum(win_rate)
                 self.logger.record(f"win_rates/{agent}", total_wins)
-                league_agents_beat.append(total_wins > (win_rate.maxlen / 2))
+                league_agents_beat.append(total_wins / float(win_rate.maxlen) > 0.6)
             OmegaConf.save(
                 config=OmegaConf.create(
                     {

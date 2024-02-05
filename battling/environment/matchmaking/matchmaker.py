@@ -3,14 +3,10 @@ import typing
 
 import numpy as np
 import poke_env
-import torch
 import trueskill
 from omegaconf import OmegaConf
-from poke_env.player import Player
-from sb3_contrib import MaskablePPO
 
-from battling.environment.opponent_player import OpponentPlayer
-from battling.environment.teams.team_builder import AgentTeamBuilder
+from utils.load_player import load_player
 
 
 class Matchmaker:
@@ -27,7 +23,9 @@ class Matchmaker:
 
     def choose(self) -> typing.Tuple[str, poke_env.player.Player]:
         opponent_tag = self._choose_trueskill()
-        player = self.load_player(opponent_tag)
+        player = load_player(
+            opponent_tag, self._league_path, self._battle_format, self.team_size
+        )
         return opponent_tag, player
 
     def update(self, opponent: str, battle_won: bool):
@@ -108,44 +106,3 @@ class Matchmaker:
                 self.agent_skills[tag] = trueskill.Rating(
                     mu=skill["mu"], sigma=skill["sigma"]
                 )
-
-    def load_player(self, opponent_tag: str) -> Player:
-        if opponent_tag == "RandomPlayer":
-            return poke_env.player.RandomPlayer(
-                battle_format=self._battle_format,
-                team=AgentTeamBuilder(
-                    battle_format=self._battle_format,
-                    team_size=self.team_size,
-                    randomize_team=True,
-                ),
-            )
-        elif opponent_tag == "MaxBasePowerPlay":
-            return poke_env.player.MaxBasePowerPlayer(
-                battle_format=self._battle_format,
-                team=AgentTeamBuilder(
-                    battle_format=self._battle_format,
-                    team_size=self.team_size,
-                    randomize_team=True,
-                ),
-            )
-        elif opponent_tag == "SimpleHeuristics":
-            return poke_env.player.SimpleHeuristicsPlayer(
-                battle_format=self._battle_format,
-                team=AgentTeamBuilder(
-                    battle_format=self._battle_format,
-                    team_size=self.team_size,
-                    randomize_team=True,
-                ),
-            )
-        else:
-            agent_path = self._league_path / opponent_tag
-            model = MaskablePPO.load(agent_path / "network.zip")
-            peripherals = torch.load(agent_path / "team.pth")
-            return OpponentPlayer(
-                model=model,
-                team=peripherals["team"],
-                preprocessor=peripherals["preprocessor"],
-                tag=opponent_tag,
-                battle_format=self._battle_format,
-                team_size=self.team_size,
-            )
