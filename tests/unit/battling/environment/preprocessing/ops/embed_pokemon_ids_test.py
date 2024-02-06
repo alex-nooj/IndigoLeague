@@ -1,7 +1,7 @@
 import typing
 
-from battling.environment.preprocessing.ops.embed_pokemon_ids import EmbedPokemonIDs
-from utils.smogon_data import SmogonData
+from indigo_league.training.preprocessing.ops import EmbedPokemonIDs
+from indigo_league.utils.smogon_data import SmogonData
 
 
 def setup() -> typing.Tuple[EmbedPokemonIDs, typing.List[str]]:

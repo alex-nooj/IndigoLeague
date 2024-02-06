@@ -1,7 +1,7 @@
 import typing
 
-from battling.environment.preprocessing.ops.embed_abilities import EmbedAbilities
-from utils.smogon_data import SmogonData
+from indigo_league.training.preprocessing.ops import EmbedAbilities
+from indigo_league.utils.smogon_data import SmogonData
 
 
 def setup() -> typing.Tuple[EmbedAbilities, typing.List[str]]:

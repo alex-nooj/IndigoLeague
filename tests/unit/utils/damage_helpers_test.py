@@ -6,9 +6,8 @@ from poke_env.environment import MoveCategory
 from poke_env.environment import Pokemon
 from poke_env.environment import SideCondition
 from poke_env.environment import Status
-from poke_env.environment import Weather
 
-from utils import damage_helpers
+from indigo_league.training.preprocessing.utils import damage_helpers
 
 
 def test_attack_defense_ratio():
