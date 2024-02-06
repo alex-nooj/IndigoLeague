@@ -50,7 +50,7 @@ class EmbedActiveIdx(Op):
             {
                 self.key: gym.spaces.Box(
                     np.asarray([0.0 for _ in range(self.n_features * self.seq_len)]),
-                    np.asarray([1 for _ in range(self.n_features * self.seq_len)]),
+                    np.asarray([1.0 for _ in range(self.n_features * self.seq_len)]),
                     dtype=np.float32,
                 )
             }

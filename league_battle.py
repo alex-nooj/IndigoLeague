@@ -69,4 +69,4 @@ async def league_battle(battle_format: str, n_challenges: int):
 
 
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(league_battle("gen8ou", 1000))
+    asyncio.get_event_loop().run_until_complete(league_battle("gen8ou", 10))

@@ -1,12 +1,8 @@
 import pathlib
-import typing
 
 import numpy as np
-import poke_env
 import trueskill
 from omegaconf import OmegaConf
-
-from utils.load_player import load_player
 
 
 class Matchmaker:
@@ -21,12 +17,10 @@ class Matchmaker:
 
         self._load_league_skills()
 
-    def choose(self) -> typing.Tuple[str, poke_env.player.Player]:
+    def choose(self) -> str:
         opponent_tag = self._choose_trueskill()
-        player = load_player(
-            opponent_tag, self._league_path, self._battle_format, self.team_size
-        )
-        return opponent_tag, player
+        # player = self.load_player(opponent_tag)
+        return opponent_tag
 
     def update(self, opponent: str, battle_won: bool):
         if battle_won:
@@ -34,9 +28,7 @@ class Matchmaker:
         else:
             self._update(opponent, self._tag)
 
-    def update_and_choose(
-        self, opponent: str, battle_won: bool
-    ) -> typing.Tuple[str, poke_env.player.Player]:
+    def update_and_choose(self, opponent: str, battle_won: bool) -> str:
         self.update(opponent, battle_won)
 
         return self.choose()
@@ -89,13 +81,13 @@ class Matchmaker:
 
         # Occasionally choose an opponent at random
         if np.random.uniform() > 0.9:
-            return np.random.choice(tags)
+            return str(np.random.choice(tags))
         else:
             # Normalize the probabilities of ties
             match_qualities = np.asarray(match_qualities) / np.sum(match_qualities)
 
             # Use the normalized match qualities to select an opponent. Bias will be toward agents we're likely to tie
-            return np.random.choice(tags, p=match_qualities)
+            return str(np.random.choice(tags, p=match_qualities))
 
     def _load_league_skills(self):
         if (self._league_path / "trueskills.yaml").is_file():

@@ -22,13 +22,8 @@ def resume_training(
     battle_format: str,
     rewards: typing.Dict[str, float],
 ) -> typing.Tuple[utils.PokePath, MaskablePPO, Gen8Env, int]:
-    try:
-        tag, _, _ = resume_path.stem.rsplit("_")
-        if tag == "runtime":
-            tag = resume_path.parent.stem
-    except ValueError:
-        tag = resume_path.parent.stem
 
+    tag = resume_path.parent.stem
     poke_path = utils.PokePath(tag=tag)
     print(resume_path)
     team_file = resume_path.parent / "team.pth"
@@ -40,8 +35,7 @@ def resume_training(
     env = Gen8Env(
         preprocessor,
         **rewards,
-        tag=tag,
-        league_path=poke_path.league_dir,
+        poke_path=poke_path,
         battle_format=battle_format,
         start_challenging=True,
         team=team,
@@ -71,10 +65,7 @@ def setup(
     starting_team_size: int,
     poke_path: utils.PokePath,
     teambuilder: typing.Optional[AgentTeamBuilder],
-    tag: str,
 ):
-    if tag is None:
-        tag = poke_path.tag
     if teambuilder is None:
         teambuilder = asyncio.get_event_loop().run_until_complete(
             genetic_team_search(100, 1, battle_format, 1)
@@ -85,8 +76,7 @@ def setup(
         ops,
         **rewards,
         seq_len=seq_len,
-        tag=tag,
-        league_path=poke_path.league_dir,
+        poke_path=poke_path,
         battle_format=battle_format,
         start_challenging=True,
         team_size=starting_team_size,
@@ -225,7 +215,6 @@ def main(
             starting_team_size=starting_team_size,
             poke_path=poke_path,
             teambuilder=teambuilder,
-            tag=tag,
         )
 
     train(
