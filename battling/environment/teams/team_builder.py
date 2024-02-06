@@ -7,17 +7,6 @@ from poke_env.teambuilder.teambuilder import Teambuilder
 from utils.smogon_data import SmogonData
 
 
-def load_team_from_file(file_path: pathlib.Path) -> str:
-    with open(str(file_path), "r") as fp:
-        team = fp.read()
-    return team
-
-
-def save_team_to_file(file_path: pathlib.Path, team: str):
-    with open(str(file_path / "team.txt"), "w") as fp:
-        fp.write(team)
-
-
 def generate_random_team(team_size: int) -> typing.List[str]:
     data = SmogonData()
     mons = data.sample_pokemon()

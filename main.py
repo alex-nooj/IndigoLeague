@@ -12,6 +12,7 @@ from battling.callbacks.curriculum_callback import CurriculumCallback
 from battling.callbacks.save_peripherals_callback import SavePeripheralsCallback
 from battling.callbacks.success_callback import SuccessCallback
 from battling.environment.gen8env import Gen8Env
+from battling.environment.teams.load_team import load_team_from_file
 from battling.environment.teams.team_builder import AgentTeamBuilder
 from team_selection.run_genetic_algo import genetic_team_search
 
@@ -21,13 +22,8 @@ def resume_training(
     battle_format: str,
     rewards: typing.Dict[str, float],
 ) -> typing.Tuple[utils.PokePath, MaskablePPO, Gen8Env, int]:
-    try:
-        tag, _, _ = resume_path.stem.rsplit("_")
-        if tag == "runtime":
-            tag = resume_path.parent.stem
-    except ValueError:
-        tag = resume_path.parent.stem
 
+    tag = resume_path.parent.stem
     poke_path = utils.PokePath(tag=tag)
     print(resume_path)
     team_file = resume_path.parent / "team.pth"
@@ -39,8 +35,7 @@ def resume_training(
     env = Gen8Env(
         preprocessor,
         **rewards,
-        tag=tag,
-        league_path=poke_path.league_dir,
+        poke_path=poke_path,
         battle_format=battle_format,
         start_challenging=True,
         team=team,
@@ -69,29 +64,25 @@ def setup(
     vf: typing.List[int],
     starting_team_size: int,
     poke_path: utils.PokePath,
-    team: typing.Optional[AgentTeamBuilder],
-    tag: str,
+    teambuilder: typing.Optional[AgentTeamBuilder],
 ):
-    if tag is None:
-        tag = poke_path.tag
-    if team is None:
-        team = asyncio.get_event_loop().run_until_complete(
+    if teambuilder is None:
+        teambuilder = asyncio.get_event_loop().run_until_complete(
             genetic_team_search(100, 1, battle_format, 1)
         )
-    team.save_team(poke_path.agent_dir)
+    teambuilder.save_team(poke_path.agent_dir)
 
     env = Gen8Env(
         ops,
         **rewards,
         seq_len=seq_len,
-        tag=tag,
-        league_path=poke_path.league_dir,
+        poke_path=poke_path,
         battle_format=battle_format,
         start_challenging=True,
         team_size=starting_team_size,
         change_opponent=False,
         starting_opponent="SimpleHeuristics",
-        team=team,
+        team=teambuilder,
     )
 
     model = MaskablePPO(
@@ -204,6 +195,7 @@ def main(
     tag: typing.Optional[str] = None,
     resume: typing.Optional[str] = None,
     callbacks: sb3_callbacks.CallbackList = None,
+    teambuilder: AgentTeamBuilder = None,
 ):
     if resume is not None and pathlib.Path(resume).is_file():
         poke_path, model, env, starting_team_size = resume_training(
@@ -213,17 +205,16 @@ def main(
         poke_path = utils.PokePath(tag=tag)
 
         env, model = setup(
-            ops,
-            rewards,
-            battle_format,
-            1,
-            shared,
-            pi,
-            vf,
-            starting_team_size,
-            poke_path,
-            None,
-            tag,
+            ops=ops,
+            rewards=rewards,
+            battle_format=battle_format,
+            seq_len=1,
+            shared=shared,
+            pi=pi,
+            vf=vf,
+            starting_team_size=starting_team_size,
+            poke_path=poke_path,
+            teambuilder=teambuilder,
         )
 
     train(
@@ -242,4 +233,15 @@ def main(
 if __name__ == "__main__":
     cfg_file = pathlib.Path(__file__).parent / "main.yaml"
     cfg = utils.load_config(cfg_file)
+    if "team" in cfg:
+        try:
+            team_list = load_team_from_file(cfg["team"])
+            team = AgentTeamBuilder(
+                cfg["battle_format"], cfg["starting_team_size"], False
+            )
+            team.set_team(team_list)
+            cfg["teambuilder"] = team
+        except RuntimeError as e:
+            print("Could not open team file!")
+        del cfg["team"]
     main(**cfg)
