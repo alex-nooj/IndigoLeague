@@ -6,6 +6,7 @@ from sb3_contrib import MaskablePPO
 
 from indigo_league.teams.team_builder import AgentTeamBuilder
 from indigo_league.training.environment.opponent_player import OpponentPlayer
+from indigo_league.utils.fixed_heuristics_player import FixedHeuristicsPlayer
 
 
 def load_player(
@@ -30,7 +31,7 @@ def load_player(
             ),
         )
     elif tag == "SimpleHeuristics":
-        return poke_env.player.SimpleHeuristicsPlayer(
+        return FixedHeuristicsPlayer(
             battle_format=battle_format,
             team=AgentTeamBuilder(
                 battle_format=battle_format,

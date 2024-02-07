@@ -11,13 +11,15 @@ from indigo_league.training.preprocessing.utils import calc_move_damage
 from indigo_league.training.preprocessing.utils import gather_team
 from indigo_league.training.preprocessing.utils import normalize_stats
 from indigo_league.training.preprocessing.utils import type_multiplier
+from indigo_league.utils.constants import NUM_MOVES
+from indigo_league.utils.constants import NUM_POKEMON
 
 
 class EmbedTeam(Op):
     def __init__(self, seq_len: int):
         super().__init__(
             seq_len=seq_len,
-            n_features=5 * (2 + 8 + len(Status) + 4 * 2),
+            n_features=(NUM_POKEMON - 1) * (2 + 8 + len(Status) + NUM_MOVES * 2),
             key="team_pokemon",
         )
 
@@ -39,8 +41,8 @@ class EmbedTeam(Op):
             status = [float(t == pokemon.status) for t in Status]
             # Current move power
             moves = list(pokemon.moves.values())
-            if len(moves) > 4:
-                moves = moves[:4]
+            if len(moves) > NUM_MOVES:
+                moves = moves[:NUM_MOVES]
             move_dmg = [
                 calc_move_damage(
                     move=move,
@@ -53,13 +55,13 @@ class EmbedTeam(Op):
                 )
                 for move in moves
             ]
-            while len(move_dmg) != 4:
+            while len(move_dmg) != NUM_MOVES:
                 move_dmg.append(0.0)
 
             opp_moves = list(battle.opponent_active_pokemon.moves.values())
 
-            if len(opp_moves) > 4:
-                opp_moves = opp_moves[:4]
+            if len(opp_moves) > NUM_MOVES:
+                opp_moves = opp_moves[:NUM_MOVES]
             opp_move_dmg = []
             for move in opp_moves:
                 opp_move_dmg.append(
@@ -73,7 +75,7 @@ class EmbedTeam(Op):
                         side_conditions=list(battle.side_conditions.keys()),
                     )
                 )
-            while len(opp_move_dmg) != 4:
+            while len(opp_move_dmg) != NUM_MOVES:
                 opp_move_dmg.append(0.0)
             pokemon_list += types + stats + status + move_dmg + opp_move_dmg
         while len(pokemon_list) < self.n_features:

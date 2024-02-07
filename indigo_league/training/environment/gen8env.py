@@ -18,13 +18,16 @@ from poke_env.player.openai_api import ObservationType
 
 from indigo_league.teams.team_builder import AgentTeamBuilder
 from indigo_league.training.environment.matchmaker import Matchmaker
+from indigo_league.training.environment.utils.action_masking import action_masks
 from indigo_league.training.preprocessing.preprocessor import Preprocessor
+from indigo_league.utils.constants import NUM_MOVES
+from indigo_league.utils.constants import NUM_POKEMON
 from indigo_league.utils.directory_helper import PokePath
 from indigo_league.utils.load_player import load_player
 
 
 class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
-    _ACTION_SPACE = list(range(4 + 6))
+    _ACTION_SPACE = list(range(NUM_MOVES + NUM_POKEMON))
 
     def __init__(
         self,
@@ -157,34 +160,14 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         return super().reset(*args, **kwargs)
 
     def action_masks(self, *args, **kwargs) -> npt.NDArray:
-        battle = self.current_battle
-        moves = np.zeros(4)
-        if battle.active_pokemon is not None:
-            for ix, move in enumerate(battle.active_pokemon.moves.values()):
-                if move.id in [m.id for m in battle.available_moves]:
-                    if (
-                        move.id.lower() == "substitute"
-                        and Effect.SUBSTITUTE in battle.active_pokemon.effects
-                    ):
-                        moves[ix] = 0
-                    else:
-                        moves[ix] = 1 if move.current_pp != 0 else 0
-        team = np.zeros(6)
-        if len(battle.available_switches) > 0:
-            team_mon_names = list(battle.team.keys())
-            for ix, mon in enumerate(team_mon_names):
-                team[ix] = int(
-                    battle.team[mon].status != Status.FNT
-                    and not battle.team[mon].active
-                )
-        mask = np.concatenate([moves, team])
+        mask = action_masks(self.current_battle)
         self._logger.debug(f"Mask: {mask}")
         return mask
 
     def action_to_move(self, action: int, battle: Battle) -> BattleOrder:
         action_mask = self.action_masks()
         if action_mask[action]:
-            if action < 4:
+            if action < NUM_MOVES:
                 self._logger.debug(
                     f"Action {action} interpreted as a move ({list(battle.active_pokemon.moves.keys())[action]}"
                 )
@@ -193,9 +176,11 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
                 )
             else:
                 self._logger.debug(
-                    f"Action {action} interpreted as a switch ({list(battle.team.values())[action - 4]}"
+                    f"Action {action} interpreted as a switch ({list(battle.team.values())[action - NUM_MOVES]}"
                 )
-                return self.agent.create_order(list(battle.team.values())[action - 4])
+                return self.agent.create_order(
+                    list(battle.team.values())[action - NUM_MOVES]
+                )
         else:
             self._logger.debug(f"Had to choose random action (given {action})")
             return self.agent.choose_random_move(battle)
@@ -204,4 +189,5 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         self.team_size = team_size
         self.agent._team.set_team_size(team_size)
         self.matchmaker.set_team_size(team_size)
+        self._opponent._team.set_team_size(team_size)
         self.win_rates = {}

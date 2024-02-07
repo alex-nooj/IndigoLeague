@@ -67,7 +67,7 @@ def setup(
 ):
     if teambuilder is None:
         teambuilder = asyncio.get_event_loop().run_until_complete(
-            genetic_team_search(100, 1, battle_format, 1)
+            genetic_team_search(20, 1, battle_format, 1)
         )
     teambuilder.save_team(poke_path.agent_dir)
 

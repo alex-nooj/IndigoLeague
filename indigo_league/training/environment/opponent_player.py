@@ -12,6 +12,7 @@ from sb3_contrib import MaskablePPO
 
 from indigo_league.teams.team_builder import AgentTeamBuilder
 from indigo_league.training.preprocessing.preprocessor import Preprocessor
+from indigo_league.utils.constants import NUM_MOVES
 
 _PLAYER_COUNTER = Counter()
 
@@ -47,7 +48,7 @@ class OpponentPlayer(Player):
 
     def action_to_move(self, action: int, battle: AbstractBattle) -> BattleOrder:
         if (
-            action < 4
+            action < NUM_MOVES
             and action < len(battle.available_moves)
             and not battle.force_switch
         ):

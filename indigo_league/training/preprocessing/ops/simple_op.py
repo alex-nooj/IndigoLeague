@@ -7,6 +7,8 @@ from poke_env.environment import AbstractBattle
 
 from indigo_league.training.preprocessing.op import Op
 from indigo_league.training.preprocessing.utils import calc_move_damage
+from indigo_league.utils.constants import NUM_MOVES
+from indigo_league.utils.constants import NUM_POKEMON
 
 
 class SimpleOp(Op):
@@ -23,7 +25,7 @@ class SimpleOp(Op):
     def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
     ) -> typing.List[float]:
-        moves_base_power = [-1.0 for _ in range(4)]
+        moves_base_power = [-1.0 for _ in range(NUM_MOVES)]
         for i, move in enumerate(battle.available_moves):
             moves_base_power[i] = calc_move_damage(
                 move=move,
@@ -36,9 +38,12 @@ class SimpleOp(Op):
             )
 
         # We count how many pokemons have fainted in each team
-        fainted_mon_team = len([mon for mon in battle.team.values() if mon.fainted]) / 6
+        fainted_mon_team = (
+            len([mon for mon in battle.team.values() if mon.fainted]) / NUM_POKEMON
+        )
         fainted_mon_opponent = (
-            len([mon for mon in battle.opponent_team.values() if mon.fainted]) / 6
+            len([mon for mon in battle.opponent_team.values() if mon.fainted])
+            / NUM_POKEMON
         )
 
         # Final vector with 10 components

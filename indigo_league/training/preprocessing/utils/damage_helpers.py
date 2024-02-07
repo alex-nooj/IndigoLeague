@@ -9,6 +9,7 @@ from poke_env.environment.status import Status
 from poke_env.environment.weather import Weather
 
 from indigo_league.training.preprocessing.utils.normalize_stats import stat_estimation
+from indigo_league.utils.constants import NUM_MOVES
 from indigo_league.utils.str_helpers import format_str
 
 
@@ -271,14 +272,14 @@ def embed_moves(
     """
     move_embedding = []
 
-    if len(moves) > 4:
-        moves = moves[:4]
+    if len(moves) > NUM_MOVES:
+        moves = moves[:NUM_MOVES]
 
     for move in moves:
         move_embedding += embed_move(move, usr, tgt, weather, side_conditions)
 
-    if len(moves) < 4:
-        for _ in range(4 - len(moves)):
+    if len(moves) < NUM_MOVES:
+        for _ in range(NUM_MOVES - len(moves)):
             move_embedding += [0.0 for _ in range(2 + 1 + 1 + 1)]
     return move_embedding
 

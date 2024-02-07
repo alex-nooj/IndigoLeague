@@ -1,37 +1,10 @@
-import asyncio
-import typing
-
 import numpy as np
 from poke_env.player import cross_evaluate
-from poke_env.player import SimpleHeuristicsPlayer
 
 from indigo_league.teams.genetic_team_builder import GeneticTeamBuilder
 from indigo_league.teams.team_builder import AgentTeamBuilder
-
-
-class TeamChanger(SimpleHeuristicsPlayer):
-    def change_team(self, team: GeneticTeamBuilder):
-        self._team = team
-
-
-async def evaluate_team(
-    player1: TeamChanger,
-    player2: TeamChanger,
-    teams: typing.List[GeneticTeamBuilder],
-    n_battles: int = 3,
-) -> typing.List[int]:
-    team_scores = [0 for _ in teams]
-    for ix_1, team_1 in enumerate(teams[:-1]):
-        print(f"\rTeam {ix_1: 3d}/{len(teams)}", end="")
-        player1.change_team(team_1)
-        for ix_2, team_2 in enumerate(teams[ix_1 + 1 :]):
-            player2.change_team(team_2)
-            await player1.battle_against(player2, n_battles)
-            team_scores[ix_1] += player1.n_won_battles
-            team_scores[ix_1 + ix_2 + 1] += n_battles - player1.n_won_battles
-            player1.reset_battles()
-            player2.reset_battles()
-    return team_scores
+from indigo_league.utils.constants import NUM_POKEMON
+from indigo_league.utils.fixed_heuristics_player import FixedHeuristicsPlayer
 
 
 async def genetic_team_search(
@@ -45,7 +18,7 @@ async def genetic_team_search(
 
     for generation in range(n_gens):
         players = [
-            SimpleHeuristicsPlayer(
+            FixedHeuristicsPlayer(
                 battle_format=battle_format, max_concurrent_battles=10, team=team
             )
             for team in teams
@@ -73,6 +46,6 @@ async def genetic_team_search(
         print(f"Generation {generation}: Highest score: {highest_win_rate:0.2f}")
     print("=== Best Team ===")
     print(teams[-1].team)
-    team = AgentTeamBuilder(battle_format, 6)
+    team = AgentTeamBuilder(battle_format, NUM_POKEMON)
     team.set_team(list(teams[-1].mons_dict.values()))
     return team

@@ -6,12 +6,13 @@ import numpy.typing as npt
 from poke_env.environment import AbstractBattle
 
 from indigo_league.training.preprocessing.op import Op
+from indigo_league.utils.constants import NUM_MOVES
 
 
 def find_prev_move(
     prev_mon: str, curr_mon: str, prev_pps: typing.List[int], curr_pps: typing.List[int]
 ) -> typing.List[float]:
-    prev_move = [0.0 for _ in range(5)]
+    prev_move = [0.0 for _ in range(NUM_MOVES + 1)]
 
     if prev_mon != curr_mon:
         prev_move[-1] = 1.0
@@ -25,7 +26,9 @@ def find_prev_move(
 
 class EmbedPreviousMoves(Op):
     def __init__(self, seq_len: int):
-        super().__init__(seq_len=seq_len, n_features=2 * 5, key="prev_move")
+        super().__init__(
+            seq_len=seq_len, n_features=2 * (NUM_MOVES + 1), key="prev_move"
+        )
         self.prev_pokemon = ""
         self.prev_move_pp = [0 for _ in range(4)]
         self.prev_opp_pokemon = ""
@@ -54,24 +57,25 @@ class EmbedPreviousMoves(Op):
                 self.prev_opp_move_pp,
             )
         else:
-            own_prev_move = [0.0 for _ in range(5)]
-            opp_prev_move = [0.0 for _ in range(5)]
+            own_prev_move = [0.0 for _ in range(self.n_features)]
+            opp_prev_move = [0.0 for _ in range(self.n_features)]
         self.prev_pokemon = battle.active_pokemon.species
         self.prev_move_pp = [
-            move.current_pp for move in list(battle.active_pokemon.moves.values())[:4]
+            move.current_pp
+            for move in list(battle.active_pokemon.moves.values())[:NUM_MOVES]
         ]
         self.opp_prev_pokemon = battle.opponent_active_pokemon.species
         self.opp_prev_move_pp = [
             move.current_pp
-            for move in list(battle.opponent_active_pokemon.moves.values())[:4]
+            for move in list(battle.opponent_active_pokemon.moves.values())[NUM_MOVES]
         ]
         return own_prev_move + opp_prev_move
 
     def _reset(self):
         self.prev_pokemon = ""
-        self.prev_move_pp = [0 for _ in range(4)]
+        self.prev_move_pp = [0 for _ in range(NUM_MOVES)]
         self.prev_opp_pokemon = ""
-        self.prev_opp_move_pp = [0 for _ in range(4)]
+        self.prev_opp_move_pp = [0 for _ in range(NUM_MOVES)]
 
     def describe_embedding(self) -> gym.spaces.Dict:
         return gym.spaces.Dict(

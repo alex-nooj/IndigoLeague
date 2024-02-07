@@ -10,6 +10,7 @@ from indigo_league.training.preprocessing.op import Op
 from indigo_league.training.preprocessing.utils import EmbeddingLUT
 from indigo_league.training.preprocessing.utils import gather_opponent_team
 from indigo_league.training.preprocessing.utils import gather_team
+from indigo_league.utils.constants import NUM_POKEMON
 
 
 class EmbedPokemonIDs(Op):
@@ -42,10 +43,10 @@ class EmbedPokemonIDs(Op):
         return mon_vec
 
     def _embed_pokemon_ids(self, mons: typing.List[str]) -> typing.List[int]:
-        if len(mons) > 6:
-            all_mons = mons[:6]
-        elif len(mons) < 6:
-            all_mons = mons + ["fainted" for _ in range(6 - len(mons))]
+        if len(mons) > NUM_POKEMON:
+            all_mons = mons[:NUM_POKEMON]
+        elif len(mons) < NUM_POKEMON:
+            all_mons = mons + ["fainted" for _ in range(NUM_POKEMON - len(mons))]
         else:
             all_mons = mons
 

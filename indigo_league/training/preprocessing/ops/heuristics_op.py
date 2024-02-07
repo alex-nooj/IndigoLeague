@@ -9,6 +9,8 @@ from poke_env.environment import SideCondition
 
 from indigo_league.training.preprocessing.op import Op
 from indigo_league.training.preprocessing.utils import calc_move_damage
+from indigo_league.utils.constants import NUM_MOVES
+from indigo_league.utils.constants import NUM_POKEMON
 
 ENTRY_HAZARDS = {
     "spikes": SideCondition.SPIKES,
@@ -23,7 +25,15 @@ class HeuristicsOp(Op):
     def __init__(self, seq_len: int):
         super().__init__(
             seq_len=seq_len,
-            n_features=2 + (6 * 4) + 1 + 1 + 1 + 4 + 4 + 4 + 4,
+            n_features=2
+            + (NUM_POKEMON * NUM_MOVES)
+            + 1
+            + 1
+            + 1
+            + NUM_MOVES
+            + NUM_MOVES
+            + NUM_MOVES
+            + NUM_MOVES,
             key="HeuristicsOp",
         )
 
@@ -31,22 +41,22 @@ class HeuristicsOp(Op):
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
     ) -> typing.List[float]:
         should_switch = self._should_switch_out(battle)
-        switch_options = [-1.0 for _ in range(5 * 4)]
+        switch_options = [-1.0 for _ in range((NUM_POKEMON - 1) * NUM_MOVES)]
         for ix, switches in enumerate(battle.available_switches):
-            switch_options[ix * 4 : (ix + 1) * 4] = self._estimate_matchup(
-                switches, battle.opponent_active_pokemon
-            )
-        n_remaining_mons = (
-            len([m for m in battle.team.values() if m.fainted is False]) / 6.0
-        )
+            switch_options[
+                ix * NUM_MOVES : (ix + 1) * NUM_MOVES
+            ] = self._estimate_matchup(switches, battle.opponent_active_pokemon)
+        n_remaining_mons = len(
+            [m for m in battle.team.values() if m.fainted is False]
+        ) / float(NUM_POKEMON)
         n_opp_remaining_mons = (
-            6 - len([m for m in battle.team.values() if m.fainted is True])
-        ) / 6.0
+            NUM_POKEMON - len([m for m in battle.team.values() if m.fainted is True])
+        ) / float(NUM_POKEMON)
         hp_fraction = battle.opponent_active_pokemon.current_hp_fraction
-        setup_moves = [-1.0 for _ in range(4)]
-        removal_moves = [-1.0 for _ in range(4)]
-        boost_moves = [-1.0 for _ in range(4)]
-        dmg_moves = [-1.0 for _ in range(4)]
+        setup_moves = [-1.0 for _ in range(NUM_MOVES)]
+        removal_moves = [-1.0 for _ in range(NUM_MOVES)]
+        boost_moves = [-1.0 for _ in range(NUM_MOVES)]
+        dmg_moves = [-1.0 for _ in range(NUM_MOVES)]
         for ix, move in enumerate(battle.available_moves):
             if ix >= len(setup_moves):
                 break

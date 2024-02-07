@@ -6,6 +6,7 @@ from logging.handlers import RotatingFileHandler
 import numpy as np
 from poke_env.teambuilder.teambuilder import Teambuilder
 
+from indigo_league.utils.constants import NUM_POKEMON
 from indigo_league.utils.smogon_data import SmogonData
 
 
@@ -43,7 +44,7 @@ class AgentTeamBuilder(Teambuilder):
 
         self._team_size = team_size
         if not randomize_team:
-            self._team = generate_random_team(6)
+            self._team = generate_random_team(NUM_POKEMON)
             print(f"\r{self._team[:team_size]}", end="")
         else:
             self._team = None

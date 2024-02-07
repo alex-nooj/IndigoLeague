@@ -133,7 +133,7 @@
   "gengar": ["poisongas", "painsplit", "infestation", "seismictoss"],
   "gyarados": ["curse", "skullbash", "bubblebeam", "dragontail"],
   "snorlax": ["bubblebeam"],
-  "venusaur": ["defensecurl", "megadrain"],
+  "venusaur": ["defensecurl", "megadrain", "reflect", "knockoff"],
   "zapdos": ["whirlwind", "curse", "tailwind"],
   "weavile": ["detect", "curse"],
   "magnezone": ["teleport", "curse"],

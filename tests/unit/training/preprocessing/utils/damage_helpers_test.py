@@ -136,8 +136,22 @@ def test_normalize_damage(damage: float, hp: float, expected: float):
     assert damage_helpers.normalize_damage(damage, hp) == expected
 
 
-def test_stab_multiplier():
-    pass
+@pytest.mark.parametrize(
+    "species,ability,move,expected",
+    [
+        ("Charizard", "blaze", "flamethrower", 1.5),
+        ("Charizard", "blaze", "airslash", 1.5),
+        ("Charizard", "blaze", "dragonbreath", 1.0),
+        ("Charizard", "Adaptability", "flamethrower", 2.0),
+        ("Charizard", "Adaptability", "airslash", 2.0),
+        ("Charizard", "Adaptability", "dragonbreath", 1.0),
+    ],
+)
+def test_stab_multiplier(species: str, ability: str, move: str, expected: float):
+    pkm = Pokemon(species=species)
+    pkm._ability = ability
+
+    assert damage_helpers.stab_multiplier(pkm, Move(move)) == expected
 
 
 def test_ability_immunities():

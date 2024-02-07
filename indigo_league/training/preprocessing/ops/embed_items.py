@@ -9,6 +9,7 @@ from indigo_league.training.preprocessing.op import Op
 from indigo_league.training.preprocessing.utils import EmbeddingLUT
 from indigo_league.training.preprocessing.utils import gather_opponent_team
 from indigo_league.training.preprocessing.utils import gather_team
+from indigo_league.utils.constants import NUM_POKEMON
 from indigo_league.utils.smogon_data import SmogonData
 
 
@@ -46,10 +47,10 @@ class EmbedItems(Op):
         return items_vec
 
     def _embed_items(self, items: typing.List[str]) -> typing.List[int]:
-        if len(items) < 6:
-            all_items = items + ["none" for _ in range(6 - len(items))]
-        elif len(items) > 6:
-            all_items = items[:6]
+        if len(items) < NUM_POKEMON:
+            all_items = items + ["none" for _ in range(NUM_POKEMON - len(items))]
+        elif len(items) > NUM_POKEMON:
+            all_items = items[:NUM_POKEMON]
         else:
             all_items = items
 

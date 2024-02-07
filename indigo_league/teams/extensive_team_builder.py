@@ -5,6 +5,7 @@ import typing
 import tqdm
 from poke_env import teambuilder
 
+from indigo_league.utils.constants import NUM_POKEMON
 from indigo_league.utils.smogon_data import create_pokemon_str
 from indigo_league.utils.smogon_data import SmogonData
 from indigo_league.utils.str_helpers import format_str
@@ -78,7 +79,7 @@ class ExtensiveTeamBuilder(teambuilder.Teambuilder):
             team += "\n"
             if len(self.mons[mon]) == 0:
                 del self.mons[mon]
-            if len(team_mons) == 6:
+            if len(team_mons) == NUM_POKEMON:
                 break
         print(team)
         return self.join_team(self.parse_showdown_team(team))

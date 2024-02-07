@@ -3,13 +3,14 @@ import typing
 import numpy as np
 from poke_env import teambuilder
 
+from indigo_league.utils.constants import NUM_POKEMON
 from indigo_league.utils.smogon_data import SmogonData
 
 
 class GeneticTeamBuilder(teambuilder.Teambuilder):
     def __init__(
         self,
-        team_size: int = 6,
+        team_size: int = NUM_POKEMON,
         mode: typing.Literal["random", "sample", "teammate"] = "teammate",
     ):
         self.data = SmogonData()

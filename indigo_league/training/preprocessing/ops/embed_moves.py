@@ -7,6 +7,7 @@ from poke_env.environment import AbstractBattle
 
 from indigo_league.training.preprocessing.op import Op
 from indigo_league.training.preprocessing.utils import EmbeddingLUT
+from indigo_league.utils.constants import NUM_MOVES
 from indigo_league.utils.smogon_data import SmogonData
 
 
@@ -37,10 +38,10 @@ class EmbedMoves(Op):
         return ids
 
     def _embed_moves(self, moves: typing.List[str]) -> typing.List[int]:
-        if len(moves) > 4:
-            all_moves = moves[:4]
-        elif len(moves) < 4:
-            all_moves = moves + ["null" for _ in range(4 - len(moves))]
+        if len(moves) > NUM_MOVES:
+            all_moves = moves[:NUM_MOVES]
+        elif len(moves) < NUM_MOVES:
+            all_moves = moves + ["null" for _ in range(NUM_MOVES - len(moves))]
         else:
             all_moves = moves
         return [self.moves_lut[move] for move in all_moves]

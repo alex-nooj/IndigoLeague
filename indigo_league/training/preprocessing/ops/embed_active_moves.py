@@ -7,13 +7,14 @@ from poke_env.environment import AbstractBattle
 
 from indigo_league.training.preprocessing.op import Op
 from indigo_league.training.preprocessing.utils import embed_moves
+from indigo_league.utils.constants import NUM_MOVES
 
 
 class EmbedActiveMoves(Op):
     def __init__(self, seq_len: int):
         super().__init__(
             seq_len=seq_len,
-            n_features=2 * 4 * (2 + 1 + 1 + 1),
+            n_features=2 * NUM_MOVES * (2 + 1 + 1 + 1),
             key="active_moves",
         )
 

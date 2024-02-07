@@ -4,6 +4,7 @@ import typing
 
 import numpy as np
 
+from indigo_league.utils.constants import NUM_MOVES
 from indigo_league.utils.str_helpers import format_str
 
 
@@ -126,7 +127,7 @@ def safe_sample_moves(
     if pokemon_name.lower() == "ditto":
         return ["transform"]
     else:
-        return choose_from_dict(moves, 4)
+        return choose_from_dict(moves, NUM_MOVES)
 
 
 def remove_incompatible_moves(
@@ -134,7 +135,7 @@ def remove_incompatible_moves(
 ) -> typing.List[str]:
     keys = [k for k in moves if len(k) != 0 and format_str(k) not in incompatible_moves]
     values = np.asarray([v for k, v in moves.items() if k in keys])
-    return list(np.random.choice(keys, p=values / np.sum(values), size=4))
+    return list(np.random.choice(keys, p=values / np.sum(values), size=NUM_MOVES))
 
 
 def choose_from_dict(
