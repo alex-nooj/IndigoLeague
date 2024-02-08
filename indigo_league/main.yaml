@@ -8,8 +8,9 @@ starting_team_size: 1
 
 # Network
 shared:
-  - 128
-  - 128
+  - 256
+  - 256
+  - 256
   - 128
   - 64
 
@@ -21,21 +22,13 @@ vf:
 
 # Preprocessing
 ops:
-#  indigo_league.training.preprocessing.ops.EmbedPokemonIDs:
-#    embedding_size: 8
-#  indigo_league.training.preprocessing.ops.EmbedMoves:
-#    embedding_size: 8
-#  indigo_league.training.preprocessing.ops.EmbedAbilities:
-#    embedding_size: 8
-#  indigo_league.training.preprocessing.ops.EmbedActivePokemon: {}
-#  indigo_league.training.preprocessing.ops.SimpleOp: {}
-  indigo_league.training.preprocessing.ops.HeuristicsOp: {}
-#  indigo_league.training.preprocessing.ops.EmbedTeam: {}
-#  indigo_league.training.preprocessing.ops.EmbedActiveMoves: {}
-#  indigo_league.training.preprocessing.ops.EmbedPreviousMoves: {}
+#  indigo_league.training.preprocessing.ops.HeuristicsOp: {}
+  indigo_league.training.preprocessing.ops.EmbedBoosts: {}
+  indigo_league.training.preprocessing.ops.EmbedMoveCategory: {}
+  indigo_league.training.preprocessing.ops.EmbedStats: {}
+  indigo_league.training.preprocessing.ops.EmbedStatus: {}
+  indigo_league.training.preprocessing.ops.EmbedSwitchOptions: {}
   indigo_league.training.preprocessing.ops.EmbedField: {}
-#  indigo_league.training.preprocessing.ops.EmbedItems:
-#    embedding_size: 5
   indigo_league.training.preprocessing.ops.EmbedActiveIdx: {}
 
 # Rewards
