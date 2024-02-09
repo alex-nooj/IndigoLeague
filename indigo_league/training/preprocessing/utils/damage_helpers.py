@@ -129,7 +129,7 @@ def ability_immunities(
         elif ability == "flashfire":
             return 0.0
     elif move_type == PokemonType.ELECTRIC:
-        if ability in ["lightingrod", "motordrive", "voltabsorb"]:
+        if ability in ["lightningrod", "motordrive", "voltabsorb"]:
             return 0.0
     elif move_type == PokemonType.GRASS:
         if ability == "sapsipper":
@@ -176,7 +176,7 @@ def weather_multiplier(
     elif weather == Weather.SUNNYDAY:
         if move_type == PokemonType.FIRE:
             return 1.5
-        elif move_type == PokemonType.FIRE:
+        elif move_type == PokemonType.WATER:
             return 0.5
     return 1.0
 
