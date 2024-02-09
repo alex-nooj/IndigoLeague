@@ -1,0 +1,46 @@
+# Overview
+battle_format: gen8ou
+total_timesteps: 100_000_000
+save_freq: 50_000
+#resume: /media/alex/USB322FD/pokemon_league/challengers/Giovanni/Giovanni_217600_steps.zip
+starting_team_size: 1
+#team: /media/alex/USB322FD/pokemon_league/team.txt
+
+# Network
+shared:
+  - 128
+  - 128
+  - 128
+  - 64
+
+pi:
+  - 32
+
+vf:
+  - 32
+
+# Preprocessing
+ops:
+#  indigo_league.training.preprocessing.ops.EmbedPokemonIDs:
+#    embedding_size: 8
+#  indigo_league.training.preprocessing.ops.EmbedMoves:
+#    embedding_size: 8
+#  indigo_league.training.preprocessing.ops.EmbedAbilities:
+#    embedding_size: 8
+#  indigo_league.training.preprocessing.ops.EmbedActivePokemon: {}
+#  indigo_league.training.preprocessing.ops.SimpleOp: {}
+  indigo_league.training.preprocessing.ops.HeuristicsOp: {}
+#  indigo_league.training.preprocessing.ops.EmbedTeam: {}
+#  indigo_league.training.preprocessing.ops.EmbedActiveMoves: {}
+#  indigo_league.training.preprocessing.ops.EmbedPreviousMoves: {}
+  indigo_league.training.preprocessing.ops.EmbedField: {}
+#  indigo_league.training.preprocessing.ops.EmbedItems:
+#    embedding_size: 5
+  indigo_league.training.preprocessing.ops.EmbedActiveIdx: {}
+
+# Rewards
+rewards:
+  fainted_value: 0.2
+  hp_value: 0.1
+  status_value: 0.0
+  victory_value: 1.0
