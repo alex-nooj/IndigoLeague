@@ -8,9 +8,8 @@ starting_team_size: 1
 
 # Network
 shared:
-  - 256
-  - 256
-  - 256
+  - 128
+  - 128
   - 128
   - 64
 
@@ -22,14 +21,14 @@ vf:
 
 # Preprocessing
 ops:
-#  indigo_league.training.preprocessing.ops.HeuristicsOp: {}
-  indigo_league.training.preprocessing.ops.EmbedBoosts: {}
-  indigo_league.training.preprocessing.ops.EmbedMoveCategory: {}
-  indigo_league.training.preprocessing.ops.EmbedStats: {}
-  indigo_league.training.preprocessing.ops.EmbedStatus: {}
-  indigo_league.training.preprocessing.ops.EmbedSwitchOptions: {}
-  indigo_league.training.preprocessing.ops.EmbedField: {}
-  indigo_league.training.preprocessing.ops.EmbedActiveIdx: {}
+  indigo_league.training.preprocessing.ops.HeuristicsOp: {}
+#  indigo_league.training.preprocessing.ops.EmbedBoosts: {}
+#  indigo_league.training.preprocessing.ops.EmbedMoveCategory: {}
+#  indigo_league.training.preprocessing.ops.EmbedStats: {}
+#  indigo_league.training.preprocessing.ops.EmbedStatus: {}
+#  indigo_league.training.preprocessing.ops.EmbedSwitchOptions: {}
+#  indigo_league.training.preprocessing.ops.EmbedField: {}
+#  indigo_league.training.preprocessing.ops.EmbedActiveIdx: {}
 
 # Rewards
 rewards:
