@@ -1,4 +1,5 @@
 import typing
+from unittest.mock import MagicMock
 
 import pytest
 from poke_env.environment import Move
@@ -13,12 +14,15 @@ from indigo_league.training.preprocessing.utils import damage_helpers
 
 
 def test_attack_defense_ratio():
-    # Move category not Physical or Special
-    # Move category physical, defense category physical
-    # Move category physical, defense category special
-    # Move category special, defense category physical
-    # Move category special, defense category special
-    pass
+    assert (
+        damage_helpers.attack_defense_ratio(
+            MoveCategory.STATUS,
+            MoveCategory.PHYSICAL,
+            Pokemon(species="shuckle"),
+            Pokemon(species="marill"),
+        )
+        == 0.0
+    )
 
 
 @pytest.mark.parametrize(
@@ -104,7 +108,9 @@ def test_screens_multiplier(
 def test_sound_multiplier(
     move_id: str, usr_ability: str, tgt_ability: typing.Optional[str], expected: float
 ):
-    assert damage_helpers.sound_multiplier(move_id, usr_ability, tgt_ability) == expected
+    assert (
+        damage_helpers.sound_multiplier(move_id, usr_ability, tgt_ability) == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -189,7 +195,8 @@ def test_ability_immunities(
     move_type: PokemonType, tgt_ability: typing.Optional[str], expected: float
 ):
     assert (
-        damage_helpers.ability_immunities(move_type=move_type, tgt_ability=tgt_ability) == expected
+        damage_helpers.ability_immunities(move_type=move_type, tgt_ability=tgt_ability)
+        == expected
     )
 
 
@@ -206,8 +213,13 @@ def test_ability_immunities(
         ("mach punch", PokemonType.FIGHTING, Pokemon(species="Gastly"), 0.0),
     ],
 )
-def test_type_multiplier(move_id: str, move_type: PokemonType, tgt: Pokemon, expected: float):
-    assert damage_helpers.type_multiplier(move_id=move_id, move_type=move_type, tgt=tgt) == expected
+def test_type_multiplier(
+    move_id: str, move_type: PokemonType, tgt: Pokemon, expected: float
+):
+    assert (
+        damage_helpers.type_multiplier(move_id=move_id, move_type=move_type, tgt=tgt)
+        == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -228,27 +240,44 @@ def test_type_multiplier(move_id: str, move_type: PokemonType, tgt: Pokemon, exp
     ],
 )
 def test_weather_multiplier(
-    move_type: PokemonType, weather: Weather, usr_ability: str, tgt_ability: str, expected: float
+    move_type: PokemonType,
+    weather: Weather,
+    usr_ability: str,
+    tgt_ability: str,
+    expected: float,
 ):
     assert (
         damage_helpers.weather_multiplier(
-            move_type=move_type, weather=weather, usr_ability=usr_ability, tgt_ability=tgt_ability
+            move_type=move_type,
+            weather=weather,
+            usr_ability=usr_ability,
+            tgt_ability=tgt_ability,
         )
         == expected
     )
 
 
-@pytest.mark.parametrize("item,expected", [
-    ("lifeorb", 5324/4096),
-    ("leftovers", 1.0),
-    (None, 1.0)
-])
+@pytest.mark.parametrize(
+    "item,expected", [("lifeorb", 5324 / 4096), ("leftovers", 1.0), (None, 1.0)]
+)
 def test_item_multiplier(item: typing.Optional[str], expected: float):
     assert damage_helpers.item_multiplier(item=item) == expected
 
 
-def test_opponent_item_multiplier():
-    pass
+@pytest.mark.parametrize(
+    "item,move,expected",
+    [
+        (None, Move("flamethrower"), 1.0),
+        ("leftovers", Move("earthquake"), 1.0),
+        ("airballoon", Move("earthquake"), 0.0),
+        ("air balloon", Move("earthquake"), 0.0),
+        ("airballoon", Move("flamethrower"), 1.0),
+    ],
+)
+def test_opponent_item_multiplier(
+    item: typing.Optional[str], move: Move, expected: float
+):
+    assert damage_helpers.opponent_item_multiplier(item=item, move=move) == expected
 
 
 class TestCalcMoveDamage:
@@ -275,10 +304,51 @@ class TestCalcMoveDamage:
         tgt._current_hp = 128.0
         assert damage_helpers.calc_move_damage(move, usr, tgt, None, None) == 0.0
 
+    def test_zero_power(self):
+        assert (
+            damage_helpers.calc_move_damage(
+                Move("lightscreen"),
+                Pokemon(species="alakazam"),
+                Pokemon(species="tyranitar"),
+                None,
+                None,
+            )
+            == -1.0
+        )
 
-def test_embed_moves():
-    pass
+
+@pytest.mark.parametrize("n_moves", [1, 2, 3, 4, 5])
+def test_embed_moves(n_moves: int):
+    moves = [Move("flamethrower") for _ in range(n_moves)]
+    usr = Pokemon(species="charizard")
+    tgt = Pokemon(species="porygon")
+
+    result = len(damage_helpers.embed_moves(moves, usr, tgt, None, []))
+    expected = 4 * len(damage_helpers.embed_move(moves[0], usr, tgt, None, []))
+
+    assert result == expected
 
 
-def test_embed_move():
-    pass
+@pytest.mark.parametrize("current_pp", [0, 1, Move("flamethrower").max_pp])
+def test_embed_move(current_pp: int):
+    move = Move("flamethrower")
+    move._current_pp = current_pp
+
+    usr = Pokemon(species="charizard")
+    tgt = Pokemon(species="blastoise")
+
+    result = damage_helpers.embed_move(move, usr, tgt, None, [])
+
+    assert result[-1] == current_pp / move.max_pp
+
+
+def test_embed_move_no_pp():
+    move = Move("flamethrower")
+    move.entry["pp"] = 0
+
+    usr = Pokemon(species="charizard")
+    tgt = Pokemon(species="blastoise")
+
+    result = damage_helpers.embed_move(move, usr, tgt, None, [])
+
+    assert result[-1] == 0.0

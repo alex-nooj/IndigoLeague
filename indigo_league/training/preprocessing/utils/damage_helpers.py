@@ -190,14 +190,14 @@ def item_multiplier(item: typing.Union[str, None]) -> float:
         return 1.0
 
 
-def opponent_item_multiplier(item: typing.Union[str, None], move: Move) -> float:
-    if item is None or format_str(item) == "unknown_item":
-        return 1.0
-    elif format_str(item) == "airballoon":
-        if move.type == PokemonType.GROUND:
-            return 0.0
-        else:
-            return 1.0
+def opponent_item_multiplier(item: typing.Optional[str], move: Move) -> float:
+    if (
+        item is not None
+        and format_str(item) == "airballoon"
+        and move.type == PokemonType.GROUND
+    ):
+        return 0.0
+    return 1.0
 
 
 def calc_move_damage(
@@ -294,7 +294,7 @@ def embed_move(
     if move.max_pp == 0:
         pp_ratio = 0.0
     else:
-        pp_ratio = min((move.current_pp / move.max_pp, 0.0))
+        pp_ratio = min(max((move.current_pp / move.max_pp, 0.0)), move.max_pp)
     return [
         type_multiplier("", poke_type, usr) / 4.0 if poke_type else -1
         for poke_type in tgt.types

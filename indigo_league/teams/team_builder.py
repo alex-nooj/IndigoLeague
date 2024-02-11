@@ -54,11 +54,14 @@ class AgentTeamBuilder(Teambuilder):
 
     def yield_team(self) -> str:
         if self._team:
-            ixs = np.random.choice(
-                list(range(len(self._team))), self._team_size, replace=False
-            )
-            team = [self._team[i] for i in ixs]
-            return self.join_team(self.parse_showdown_team("\n".join(team)))
+            if self._team_size == NUM_POKEMON:
+                return self.join_team(self.parse_showdown_team("\n".join(self._team)))
+            else:
+                ixs = np.random.choice(
+                    list(range(len(self._team))), self._team_size, replace=False
+                )
+                team = [self._team[i] for i in ixs]
+                return self.join_team(self.parse_showdown_team("\n".join(team)))
         else:
             team = generate_random_team(self._team_size)
             self._logger.debug("".join(team))
