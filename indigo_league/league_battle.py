@@ -42,7 +42,7 @@ async def league_battle(battle_format: str, n_challenges: int):
         if agent.is_dir()
     ]
     players.append(
-        load_player("SimpleHeuristics", poke_path.league_dir, battle_format, 6)
+        load_player("FixedHeuristics", poke_path.league_dir, battle_format, 6)
     )
 
     cross_evaluation = await poke_env.player.cross_evaluate(

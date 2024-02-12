@@ -6,6 +6,7 @@ import stable_baselines3.common.callbacks as sb3_callbacks
 import torch
 from sb3_contrib import MaskablePPO
 
+from indigo_league import training
 from indigo_league.teams.load_team import load_team_from_file
 from indigo_league.teams.run_genetic_algo import genetic_team_search
 from indigo_league.teams.team_builder import AgentTeamBuilder
@@ -14,43 +15,6 @@ from indigo_league.training.environment import Gen8Env
 from indigo_league.training.network import PokemonFeatureExtractor
 from indigo_league.utils import load_config
 from indigo_league.utils.directory_helper import PokePath
-
-
-def resume_training(
-    resume_path: pathlib.Path,
-    battle_format: str,
-    rewards: typing.Dict[str, float],
-) -> typing.Tuple[PokePath, MaskablePPO, Gen8Env, int]:
-
-    tag = resume_path.parent.stem
-    poke_path = PokePath(tag=tag)
-    print(resume_path)
-    team_file = resume_path.parent / "team.pth"
-    print(team_file)
-    team_info = torch.load(team_file)
-    team = team_info["team"]
-    preprocessor = team_info["preprocessor"]
-
-    env = Gen8Env(
-        preprocessor,
-        **rewards,
-        poke_path=poke_path,
-        battle_format=battle_format,
-        start_challenging=True,
-        team=team,
-        team_size=team.team_size,
-        change_opponent=False,
-        starting_opponent="SimpleHeuristics",
-        seq_len=1,
-    )
-
-    model = MaskablePPO.load(
-        resume_path,
-        env=env,
-        verbose=1,
-        tensorboard_log=str(poke_path.agent_dir),
-    )
-    return poke_path, model, env, team.team_size
 
 
 def setup(
@@ -109,81 +73,6 @@ def setup(
     return env, model
 
 
-def train(
-    env: Gen8Env,
-    model: MaskablePPO,
-    starting_team_size: int,
-    final_team_size: int,
-    total_timesteps: int,
-    save_freq: int,
-    poke_path: PokePath,
-    tag: str,
-    callback_list: sb3_callbacks.CallbackList = None,
-):
-    checkpoint_callback = sb3_callbacks.CheckpointCallback(
-        save_freq,
-        save_path=str(poke_path.agent_dir),
-        name_prefix=poke_path.tag,
-    )
-
-    try:
-        for team_size in range(starting_team_size, final_team_size):
-            print(f"Team Size: {team_size}")
-            env.set_team_size(team_size)
-            model.set_env(env)
-
-            model.learn(
-                total_timesteps=total_timesteps,
-                callback=sb3_callbacks.CallbackList(
-                    [
-                        checkpoint_callback,
-                        callbacks.SavePeripheralsCallback(
-                            poke_path=poke_path, save_freq=save_freq
-                        ),
-                        callbacks.CurriculumCallback(0.7),
-                    ]
-                ),
-                reset_num_timesteps=False,
-            )
-            model.save(str(poke_path.agent_dir / f"team_size_{team_size}.zip"))
-
-        print(f"Team Size: {final_team_size}")
-        env.set_team_size(final_team_size)
-        env.change_opponent = True
-        if callback_list is None:
-            callback_list = [
-                checkpoint_callback,
-                callbacks.SavePeripheralsCallback(
-                    poke_path=poke_path, save_freq=save_freq
-                ),
-                callbacks.SuccessCallback(
-                    poke_path.agent_dir, poke_path.league_dir, tag=tag
-                ),
-            ]
-        model.set_env(env)
-        model.learn(
-            total_timesteps=total_timesteps,
-            callback=callback_list,
-            reset_num_timesteps=False,
-        )
-    except KeyboardInterrupt as e:
-        model.save(
-            str(
-                poke_path.agent_dir
-                / f"keyboard_interrupt_{checkpoint_callback.num_timesteps}.zip"
-            )
-        )
-        raise e
-    except RuntimeError as e:
-        model.save(
-            str(
-                poke_path.agent_dir
-                / f"runtime_error_{checkpoint_callback.num_timesteps}.zip"
-            )
-        )
-        raise e
-
-
 def main(
     ops: typing.Dict[str, typing.Dict[str, typing.Any]],
     rewards: typing.Dict[str, float],
@@ -197,11 +86,10 @@ def main(
     final_team_size=6,
     tag: typing.Optional[str] = None,
     resume: typing.Optional[str] = None,
-    callback_list: sb3_callbacks.CallbackList = None,
     teambuilder: AgentTeamBuilder = None,
 ):
     if resume is not None and pathlib.Path(resume).is_file():
-        poke_path, model, env, starting_team_size = resume_training(
+        poke_path, model, env, starting_team_size = training.resume_training(
             pathlib.Path(resume), battle_format, rewards
         )
     else:
@@ -220,16 +108,47 @@ def main(
             teambuilder=teambuilder,
         )
 
-    train(
-        env,
-        model,
-        starting_team_size,
-        final_team_size,
-        total_timesteps,
+    checkpoint_callback = sb3_callbacks.CheckpointCallback(
         save_freq,
-        poke_path,
-        poke_path.tag,
-        callback_list=callback_list,
+        save_path=str(poke_path.agent_dir),
+        name_prefix=poke_path.tag,
+    )
+    callback_list = [
+        checkpoint_callback,
+        callbacks.SavePeripheralsCallback(poke_path=poke_path, save_freq=save_freq),
+    ]
+
+    if starting_team_size != final_team_size:
+        training.curriculum(
+            env=env,
+            model=model,
+            starting_team_size=starting_team_size,
+            final_team_size=final_team_size,
+            total_timesteps=total_timesteps,
+            poke_path=poke_path,
+            callback_list=sb3_callbacks.CallbackList(
+                callback_list
+                + [
+                    callbacks.CurriculumCallback(threshold=0.5),
+                ]
+            ),
+        )
+    env.set_team_size(final_team_size)
+    env.change_opponent = True
+
+    training.train(
+        env=env,
+        model=model,
+        total_timesteps=total_timesteps,
+        poke_path=poke_path,
+        callback_list=sb3_callbacks.CallbackList(
+            callback_list
+            + [
+                callbacks.SuccessCallback(
+                    poke_path.agent_dir, poke_path.league_dir, poke_path.tag
+                )
+            ]
+        ),
     )
 
 
