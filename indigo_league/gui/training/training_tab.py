@@ -14,7 +14,6 @@ from indigo_league.gui.training.rewards_tab import RewardsTab
 from indigo_league.gui.training.trueskills_tab import TrueskillsTab
 from indigo_league.gui.training.win_rates_tab import WinRatesTab
 from indigo_league.main import setup
-from indigo_league.main import train
 from indigo_league.teams.team_builder import AgentTeamBuilder
 from indigo_league.training.callbacks.gui_close_callback import ControllerCallback
 from indigo_league.training.callbacks.gui_close_callback import RunnerCheck
@@ -22,6 +21,7 @@ from indigo_league.training.callbacks.save_peripherals_callback import (
     SavePeripheralsCallback,
 )
 from indigo_league.training.callbacks.success_callback import SuccessCallback
+from indigo_league.training.train import train
 from indigo_league.utils.directory_helper import PokePath
 
 
