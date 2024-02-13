@@ -11,7 +11,7 @@ from indigo_league.teams.load_team import load_team_from_file
 from indigo_league.teams.run_genetic_algo import genetic_team_search
 from indigo_league.teams.team_builder import AgentTeamBuilder
 from indigo_league.training import callbacks
-from indigo_league.training.environment import Gen8Env
+from indigo_league.training.environment import build_env
 from indigo_league.training.network import PokemonFeatureExtractor
 from indigo_league.utils import load_config
 from indigo_league.utils.directory_helper import PokePath
@@ -34,18 +34,16 @@ def setup(
             genetic_team_search(20, 1, battle_format, 1)
         )
     teambuilder.save_team(poke_path.agent_dir)
-
-    env = Gen8Env(
-        ops,
-        **rewards,
+    env = build_env(
+        ops=ops,
         seq_len=seq_len,
         poke_path=poke_path,
+        **rewards,
         battle_format=battle_format,
-        start_challenging=True,
         team_size=starting_team_size,
-        change_opponent=False,
-        starting_opponent="SimpleHeuristics",
         team=teambuilder,
+        change_opponent=False,
+        starting_opponent="FixedHeuristics",
     )
 
     model = MaskablePPO(

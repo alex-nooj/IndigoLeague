@@ -40,7 +40,16 @@ ops:
 
 # Rewards
 rewards:
-  fainted_value: 0.2
-  hp_value: 0.1
-  status_value: 0.0
-  victory_value: 1.0
+  schedule: 100_000
+  fainted_value:
+    value: 0.2
+    scale: 0.7
+  hp_value:
+    value: 0.1
+    scale: 0.7
+  status_value:
+    value: 0.1
+    scale: 0.7
+  victory_value:
+    value: 1.0
+    scale: 1.0
