@@ -4,7 +4,7 @@ import numpy as np
 from poke_env import teambuilder
 
 from indigo_league.utils.constants import NUM_POKEMON
-from indigo_league.utils.smogon_data import SmogonData
+from indigo_league.teams.smogon_data import SmogonData
 
 
 class GeneticTeamBuilder(teambuilder.Teambuilder):

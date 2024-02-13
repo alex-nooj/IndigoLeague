@@ -10,7 +10,7 @@ from indigo_league.training.preprocessing.utils import EmbeddingLUT
 from indigo_league.training.preprocessing.utils import gather_opponent_team
 from indigo_league.training.preprocessing.utils import gather_team
 from indigo_league.utils.constants import NUM_POKEMON
-from indigo_league.utils.smogon_data import SmogonData
+from indigo_league.teams.smogon_data import SmogonData
 
 
 class EmbedItems(Op):

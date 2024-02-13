@@ -6,8 +6,8 @@ import tqdm
 from poke_env import teambuilder
 
 from indigo_league.utils.constants import NUM_POKEMON
-from indigo_league.utils.smogon_data import create_pokemon_str
-from indigo_league.utils.smogon_data import SmogonData
+from indigo_league.teams.utils.create_pokemon_str import create_pokemon_str
+from indigo_league.teams.smogon_data import SmogonData
 from indigo_league.utils.str_helpers import format_str
 
 
