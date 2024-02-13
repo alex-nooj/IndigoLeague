@@ -12,10 +12,18 @@ class RewardScheduler:
     def __init__(self, value: float, scale: float):
         """Initializes the instance for a single reward.
 
+        Raises:
+            RuntimeError: If scale is not between 0 and 1 (inclusive)
+
         Args:
             value: The starting weight for this reward
             scale: Number to multiply value by when update() is called.
         """
+        if scale < 0.0:
+            raise RuntimeError("scale is less than 0, reward will oscillate!")
+        elif scale > 1.0:
+            raise RuntimeError("scale is greater than 1, reward will explode!")
+
         self._value, self._scale = value, scale
 
     def update(self):
