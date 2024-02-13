@@ -12,6 +12,12 @@ from indigo_league.utils.str_helpers import format_str
 
 
 def generate_all_pokemon() -> typing.Dict[str, typing.List[str]]:
+    """Generates a dictionary of all possible pokemon moveset combinations
+
+    Returns:
+        Dictionary with species as the keys and lists of showdown-compatible
+        strings as the values
+    """
     data = SmogonData()
     pokemon = {}
     filename = (
