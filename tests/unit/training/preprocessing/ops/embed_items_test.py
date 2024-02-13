@@ -10,8 +10,8 @@ def setup() -> typing.Tuple[EmbedItems, typing.List[str]]:
     for mon in data.smogon_data["data"].values():
         for item in mon["Items"]:
             items[item] = 1
-    ability_list = ["none"] + sorted(list(items.keys())) + ["unknown_item"]
-    return EmbedItems(8, 4), ability_list
+    item_list = ["none"] + sorted(list(items.keys())) + ["unknown_item"]
+    return EmbedItems(8, 4), item_list
 
 
 def test_embed_abilities():

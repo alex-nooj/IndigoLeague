@@ -1,22 +1,28 @@
 import typing
+from unittest.mock import MagicMock
 
 import pytest
 from poke_env.environment import Move
 from poke_env.environment import MoveCategory
 from poke_env.environment import Pokemon
+from poke_env.environment import PokemonType
 from poke_env.environment import SideCondition
 from poke_env.environment import Status
+from poke_env.environment import Weather
 
 from indigo_league.training.preprocessing.utils import damage_helpers
 
 
 def test_attack_defense_ratio():
-    # Move category not Physical or Special
-    # Move category physical, defense category physical
-    # Move category physical, defense category special
-    # Move category special, defense category physical
-    # Move category special, defense category special
-    pass
+    assert (
+        damage_helpers.attack_defense_ratio(
+            MoveCategory.STATUS,
+            MoveCategory.PHYSICAL,
+            Pokemon(species="shuckle"),
+            Pokemon(species="marill"),
+        )
+        == 0.0
+    )
 
 
 @pytest.mark.parametrize(
@@ -154,24 +160,124 @@ def test_stab_multiplier(species: str, ability: str, move: str, expected: float)
     assert damage_helpers.stab_multiplier(pkm, Move(move)) == expected
 
 
-def test_ability_immunities():
-    pass
+@pytest.mark.parametrize(
+    "move_type,tgt_ability,expected",
+    [
+        (PokemonType.WATER, "Dry Skin", 0.0),
+        (PokemonType.WATER, "Storm Drain", 0.0),
+        (PokemonType.WATER, "Water Absorb", 0.0),
+        (PokemonType.WATER, "Blaze", 1.0),
+        (PokemonType.FIRE, "Dry Skin", 2.0),
+        (PokemonType.FIRE, "Flash Fire", 0.0),
+        (PokemonType.FIRE, "Blaze", 1.0),
+        (PokemonType.ELECTRIC, "Lightning Rod", 0.0),
+        (PokemonType.ELECTRIC, "Motor Drive", 0.0),
+        (PokemonType.ELECTRIC, "Volt Absorb", 0.0),
+        (PokemonType.ELECTRIC, "Blaze", 1.0),
+        (PokemonType.GRASS, "Sap Sipper", 0.0),
+        (PokemonType.GRASS, "Blaze", 1.0),
+        (PokemonType.GROUND, "Levitate", 0.0),
+        (PokemonType.GROUND, "Blaze", 1.0),
+        (PokemonType.ICE, "Dry Skin", 1.0),
+        (PokemonType.ICE, "Storm Drain", 1.0),
+        (PokemonType.ICE, "Water Absorb", 1.0),
+        (PokemonType.ICE, "Flash Fire", 1.0),
+        (PokemonType.ICE, "Lightning Rod", 1.0),
+        (PokemonType.ICE, "Motor Drive", 1.0),
+        (PokemonType.ICE, "Volt Absorb", 1.0),
+        (PokemonType.ICE, "Sap Sipper", 1.0),
+        (PokemonType.ICE, "Levitate", 1.0),
+        (PokemonType.ICE, "Blaze", 1.0),
+        (PokemonType.ICE, None, 1.0),
+    ],
+)
+def test_ability_immunities(
+    move_type: PokemonType, tgt_ability: typing.Optional[str], expected: float
+):
+    assert (
+        damage_helpers.ability_immunities(move_type=move_type, tgt_ability=tgt_ability)
+        == expected
+    )
 
 
-def test_type_multiplier():
-    pass
+@pytest.mark.parametrize(
+    "move_id,move_type,tgt,expected",
+    [
+        ("freeze dry", PokemonType.WATER, Pokemon(species="Ludicolo"), 2.0),
+        ("freeze dry", PokemonType.WATER, Pokemon(species="Pikachu"), 1.0),
+        ("flamethrower", PokemonType.FIRE, Pokemon(species="Scizor"), 4.0),
+        ("flamethrower", PokemonType.FIRE, Pokemon(species="Bellsprout"), 2.0),
+        ("flamethrower", PokemonType.FIRE, Pokemon(species="Slaking"), 1.0),
+        ("flamethrower", PokemonType.FIRE, Pokemon(species="Golem"), 0.5),
+        ("flamethrower", PokemonType.FIRE, Pokemon(species="Relicanth"), 0.25),
+        ("mach punch", PokemonType.FIGHTING, Pokemon(species="Gastly"), 0.0),
+    ],
+)
+def test_type_multiplier(
+    move_id: str, move_type: PokemonType, tgt: Pokemon, expected: float
+):
+    assert (
+        damage_helpers.type_multiplier(move_id=move_id, move_type=move_type, tgt=tgt)
+        == expected
+    )
 
 
-def test_weather_multiplier():
-    pass
+@pytest.mark.parametrize(
+    "move_type,weather,usr_ability,tgt_ability,expected",
+    [
+        (PokemonType.FIRE, Weather.RAINDANCE, "blaze", "blaze", 0.5),
+        (PokemonType.WATER, Weather.RAINDANCE, "waterabsorb", "blaze", 1.5),
+        (PokemonType.GRASS, Weather.RAINDANCE, "waterabsorb", "blaze", 1.0),
+        (PokemonType.FIRE, Weather.SUNNYDAY, "blaze", "blaze", 1.5),
+        (PokemonType.WATER, Weather.SUNNYDAY, "waterabsorb", "blaze", 0.5),
+        (PokemonType.GRASS, Weather.SUNNYDAY, "waterabsorb", "blaze", 1.0),
+        (PokemonType.GRASS, None, "waterabsorb", "blaze", 1.0),
+        (PokemonType.WATER, Weather.RAINDANCE, "cloudnine", "blaze", 1.0),
+        (PokemonType.WATER, Weather.RAINDANCE, "airlock", "blaze", 1.0),
+        (PokemonType.WATER, Weather.RAINDANCE, "blaze", "cloudnine", 1.0),
+        (PokemonType.WATER, Weather.RAINDANCE, "blaze", "airlock", 1.0),
+        (PokemonType.WATER, Weather.RAINDANCE, "blaze", "None", 1.5),
+    ],
+)
+def test_weather_multiplier(
+    move_type: PokemonType,
+    weather: Weather,
+    usr_ability: str,
+    tgt_ability: str,
+    expected: float,
+):
+    assert (
+        damage_helpers.weather_multiplier(
+            move_type=move_type,
+            weather=weather,
+            usr_ability=usr_ability,
+            tgt_ability=tgt_ability,
+        )
+        == expected
+    )
 
 
-def test_item_multiplier():
-    pass
+@pytest.mark.parametrize(
+    "item,expected", [("lifeorb", 5324 / 4096), ("leftovers", 1.0), (None, 1.0)]
+)
+def test_item_multiplier(item: typing.Optional[str], expected: float):
+    assert damage_helpers.item_multiplier(item=item) == expected
 
 
-def test_opponent_item_multiplier():
-    pass
+@pytest.mark.parametrize(
+    "item,move,expected",
+    [
+        (None, Move("flamethrower"), 1.0),
+        ("leftovers", Move("earthquake"), 1.0),
+        ("airballoon", Move("earthquake"), 0.0),
+        ("air balloon", Move("earthquake"), 0.0),
+        ("airballoon", Move("flamethrower"), 1.0),
+    ],
+)
+def test_opponent_item_multiplier(
+    item: typing.Optional[str], move: Move, expected: float
+):
+    assert damage_helpers.opponent_item_multiplier(item=item, move=move) == expected
 
 
 class TestCalcMoveDamage:
@@ -198,10 +304,51 @@ class TestCalcMoveDamage:
         tgt._current_hp = 128.0
         assert damage_helpers.calc_move_damage(move, usr, tgt, None, None) == 0.0
 
+    def test_zero_power(self):
+        assert (
+            damage_helpers.calc_move_damage(
+                Move("lightscreen"),
+                Pokemon(species="alakazam"),
+                Pokemon(species="tyranitar"),
+                None,
+                None,
+            )
+            == -1.0
+        )
 
-def test_embed_moves():
-    pass
+
+@pytest.mark.parametrize("n_moves", [1, 2, 3, 4, 5])
+def test_embed_moves(n_moves: int):
+    moves = [Move("flamethrower") for _ in range(n_moves)]
+    usr = Pokemon(species="charizard")
+    tgt = Pokemon(species="porygon")
+
+    result = len(damage_helpers.embed_moves(moves, usr, tgt, None, []))
+    expected = 4 * len(damage_helpers.embed_move(moves[0], usr, tgt, None, []))
+
+    assert result == expected
 
 
-def test_embed_move():
-    pass
+@pytest.mark.parametrize("current_pp", [0, 1, Move("flamethrower").max_pp])
+def test_embed_move(current_pp: int):
+    move = Move("flamethrower")
+    move._current_pp = current_pp
+
+    usr = Pokemon(species="charizard")
+    tgt = Pokemon(species="blastoise")
+
+    result = damage_helpers.embed_move(move, usr, tgt, None, [])
+
+    assert result[-1] == current_pp / move.max_pp
+
+
+def test_embed_move_no_pp():
+    move = Move("flamethrower")
+    move.entry["pp"] = 0
+
+    usr = Pokemon(species="charizard")
+    tgt = Pokemon(species="blastoise")
+
+    result = damage_helpers.embed_move(move, usr, tgt, None, [])
+
+    assert result[-1] == 0.0

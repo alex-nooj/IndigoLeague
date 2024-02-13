@@ -1,6 +1,6 @@
 import typing
 
-from indigo_league.training.preprocessing.ops import EmbedAbilities
+from indigo_league.training.preprocessing.ops.embed_abilities import EmbedAbilities
 from indigo_league.utils.smogon_data import SmogonData
 
 
