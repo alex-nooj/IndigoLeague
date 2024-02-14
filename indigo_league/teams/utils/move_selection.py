@@ -13,25 +13,58 @@ from indigo_league.utils.str_helpers import format_str
 def safe_sample_moves(
     pokemon_name: str, ability: str, item: str, evs: typing.List[str], nature: str, moves: typing.Dict[str, float]
 ) -> typing.List[str]:
+    """Will filter moves based on stats and items, then choose 4 unique moves.
+
+    Args:
+        pokemon_name: Species of the pokemon
+        ability: Pokemon's ability
+        item: Pokemon's held item
+        evs: List of Pokemon's effort values in stat order
+        nature: Pokemon's nature
+        moves: Dict of possible moves with {move name, frequency}
+
+    Returns:
+        List of move names of length NUM_MOVES
+    """
+    if format_str(pokemon_name) == "ditto":
+        return ["transform"]
+
     moves = {k: v for k, v in moves.items() if k not in ["", "teleport", "zapcannon"]}
     moves = smart_filter_moves(
         name=pokemon_name, ability=ability, item=item, evs=evs, nature=nature, moves=moves
     )
-    if pokemon_name.lower() == "ditto":
-        return ["transform"]
-    else:
-        return choose_from_dict(moves, NUM_MOVES)
+    return choose_from_dict(moves, NUM_MOVES)
 
 
 def remove_move_category(
     moves: typing.Dict[str, float], category: MoveCategory
 ) -> typing.Dict[str, float]:
+    """Removes moves from move pool if they have the given category.
+
+    Args:
+        moves: Dict of possible moves with {move name, frequency}
+        category: Move category to filter by
+
+    Returns:
+        The moves Dict but without any moves belonging to the given MoveCategory
+    """
     return {k: v for k, v in moves.items() if Move(k).category != category}
 
 
 def remove_bad_offensive_moves(
     pokemon_name: str, nature: str, evs: typing.List[str], moves: typing.Dict[str, float]
 ) -> typing.Dict[str, float]:
+    """Determines the Pokemon's worst offensive stat, then removes moves that use that stat
+
+    Args:
+        pokemon_name: Species of the pokemon
+        nature: Pokemon's nature
+        evs: List of Pokemon's effort values in stat order
+        moves: Dict of possible moves with {move name, frequency}
+
+    Returns:
+        The moves Dict but without any moves belonging to the bad offensive stat category
+    """
     pokemon = Pokemon(species=pokemon_name)
 
     atk = NATURES[nature]["atk"] * pokemon.base_stats["atk"] + int(evs[1]) // 4
@@ -39,7 +72,7 @@ def remove_bad_offensive_moves(
 
     if atk > spa:
         return remove_move_category(moves=moves, category=MoveCategory.SPECIAL)
-    elif spa < atk:
+    elif atk < spa:
         return remove_move_category(moves=moves, category=MoveCategory.PHYSICAL)
 
     return moves
@@ -48,13 +81,36 @@ def remove_bad_offensive_moves(
 def remove_moves_based_on_item(
     item: str, moves: typing.Dict[str, float]
 ) -> typing.Dict[str, float]:
+    """Checks if the pokemon is holding a specific item then removes moves based on that.
+
+    Assault vest prevents the holder from using status moves, while "choice" items make status moves
+    a poor choice (since the pokemon is locked into the move). This function removes these moves
+    from the possible move pool.
+
+    Args:
+        item: Pokemon's held item
+        moves: Dict of possible moves with {move name, frequency}
+
+    Returns:
+        The moves Dict but without any status moves if the pokemon has the named items
+    """
     if format_str(item) in ["assaultvest", "choicescarf", "choicespecs", "choiceband"]:
         return remove_move_category(moves, MoveCategory.STATUS)
     return moves
 
 
 def remove_weather_moves(ability: str, moves: typing.Dict[str, float]) -> typing.Dict[str, float]:
-    # If ability causes weather, don't need a move to do it
+    """The moves Dict but without any moves belonging to the bad offensive stat category
+
+
+    Args:
+        ability: Pokemon's ability
+        moves: Dict of possible moves with {move name, frequency}
+
+    Returns:
+        The moves Dict but without any weather moves if the pokemon has the corresponding ability
+    """
+
     if format_str(ability) == "snowwarning" and "hail" in moves:
         del moves["hail"]
     elif format_str(ability) == "drought" and "sunnyday" in moves:
