@@ -20,6 +20,12 @@ class Matchmaker:
         self.team_size = team_size
 
         self._load_league_skills()
+        self._players = {
+            t: load_player(
+                tag=t, league_path=league_path, battle_format=battle_format, team_size=team_size
+            )
+            for t in self.agent_skills if t not in [tag, "FixedHeuristics"]
+        }
 
     def choose(self) -> typing.Tuple[str, Player]:
         opponent_tag = self._choose_trueskill()
@@ -52,8 +58,8 @@ class Matchmaker:
                     "mu": self.agent_skills[agent.stem].mu,
                     "sigma": self.agent_skills[agent.stem].sigma,
                 }
-        # for agent in ["RandomPlayer", "MaxBasePowerPlay", "SimpleHeuristics"]:
-        for agent in ["SimpleHeuristics"]:
+
+        for agent in ["FixedHeuristics"]:
             dict_skills[agent] = {
                 "mu": self.agent_skills[agent].mu,
                 "sigma": self.agent_skills[agent].sigma,

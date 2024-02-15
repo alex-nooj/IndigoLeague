@@ -68,7 +68,9 @@
             "teleport",
             "toxic",
             "doubleedge",
-            "curse"
+            "curse",
+            "reflect",
+            "painsplit"
         ],
   "hitmonlee": [
             "suckerpunch",
