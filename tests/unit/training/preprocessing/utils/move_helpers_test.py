@@ -1,4 +1,5 @@
 import typing
+from unittest.mock import patch
 
 import pytest
 from poke_env.environment import Field
@@ -10,6 +11,16 @@ from poke_env.environment import Weather
 
 from indigo_league.training.preprocessing.utils import move_helpers
 
+
+
+def test_check_status_move():
+    with patch("from indigo_league.training.preprocessing.utils.move_helpers.burn_possible", return_value=True) as burn_possible, \
+            patch("from indigo_league.training.preprocessing.utils.move_helpers.freeze_possible",
+                  return_value=True) as burn_possible, \
+            patch("from indigo_league.training.preprocessing.utils.move_helpers.paralysis_possible",
+                  return_value=True) as burn_possible, \
+ \
+            pass
 
 @pytest.mark.parametrize(
     "names",

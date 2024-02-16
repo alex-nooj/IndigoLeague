@@ -7,6 +7,12 @@ from poke_env.environment import MoveCategory
 from indigo_league.teams.utils import move_selection
 
 
+def test_safe_sample_moves():
+    assert move_selection.safe_sample_moves("ditto", "limber", "leftovers", [], "modest", []) == [
+        "transform"
+    ]
+
+
 @pytest.mark.parametrize(
     "category", [MoveCategory.STATUS, MoveCategory.PHYSICAL, MoveCategory.SPECIAL]
 )
