@@ -10,9 +10,7 @@ from indigo_league.utils.load_player import load_player
 
 
 class Matchmaker:
-    def __init__(
-        self, tag: str, league_path: pathlib.Path, battle_format: str, team_size: int
-    ):
+    def __init__(self, tag: str, league_path: pathlib.Path, battle_format: str, team_size: int):
         self.agent_skills = {tag: trueskill.Rating()}
         self._tag = tag
         self._battle_format = battle_format
@@ -24,18 +22,21 @@ class Matchmaker:
             t: load_player(
                 tag=t, league_path=league_path, battle_format=battle_format, team_size=team_size
             )
-            for t in self.agent_skills if t not in [tag, "FixedHeuristics"]
+            for t in self.agent_skills
+            if t != tag
         }
 
     def choose(self) -> typing.Tuple[str, Player]:
         opponent_tag = self._choose_trueskill()
-        player = load_player(
-            tag=opponent_tag,
-            league_path=self._league_path,
-            battle_format=self._battle_format,
-            team_size=self.team_size,
-        )
-        return opponent_tag, player
+
+        # if opponent_tag == "FixedHeuristics":
+        #     player = load_player(
+        #         tag=opponent_tag,
+        #         league_path=self._league_path,
+        #         battle_format=self._battle_format,
+        #         team_size=self.team_size,
+        #     )
+        return opponent_tag, self._players[opponent_tag]
 
     def update(self, opponent: str, battle_won: bool):
         if battle_won:
@@ -43,9 +44,7 @@ class Matchmaker:
         else:
             self._update(opponent, self._tag)
 
-    def update_and_choose(
-        self, opponent: str, battle_won: bool
-    ) -> typing.Tuple[str, Player]:
+    def update_and_choose(self, opponent: str, battle_won: bool) -> typing.Tuple[str, Player]:
         self.update(opponent, battle_won)
 
         return self.choose()
@@ -68,6 +67,13 @@ class Matchmaker:
 
     def set_team_size(self, team_size: int):
         self.team_size = team_size
+        for k in self._players:
+            self._players[k] = load_player(
+                tag=k,
+                league_path=self._league_path,
+                battle_format=self._battle_format,
+                team_size=team_size,
+            )
 
     def _update(self, winner: str, loser: str):
         if winner not in self.agent_skills:
@@ -88,9 +94,7 @@ class Matchmaker:
                 continue
             match_qualities.append(
                 3
-                if trueskill.quality_1vs1(
-                    self.agent_skills[tag], self.agent_skills[self._tag]
-                )
+                if trueskill.quality_1vs1(self.agent_skills[tag], self.agent_skills[self._tag])
                 > 0.5
                 else 1
             )
@@ -103,15 +107,12 @@ class Matchmaker:
             # Normalize the probabilities of ties
             match_qualities = np.asarray(match_qualities) / np.sum(match_qualities)
 
-            # Use the normalized match qualities to select an opponent. Bias will be toward agents we're likely to tie
+            # Use the normalized match qualities to select an opponent.
+            # Bias will be toward agents we're likely to tie
             return str(np.random.choice(tags, p=match_qualities))
 
     def _load_league_skills(self):
         if (self._league_path / "trueskills.yaml").is_file():
             self.agent_skills = {}
-            for tag, skill in OmegaConf.load(
-                self._league_path / "trueskills.yaml"
-            ).items():
-                self.agent_skills[tag] = trueskill.Rating(
-                    mu=skill["mu"], sigma=skill["sigma"]
-                )
+            for tag, skill in OmegaConf.load(self._league_path / "trueskills.yaml").items():
+                self.agent_skills[tag] = trueskill.Rating(mu=skill["mu"], sigma=skill["sigma"])
