@@ -32,7 +32,7 @@ def resume_training(
         team=team,
         team_size=team.team_size,
         change_opponent=False,
-        starting_opponent="SimpleHeuristics",
+        starting_opponent="FixedHeuristics",
         seq_len=1,
     )
 

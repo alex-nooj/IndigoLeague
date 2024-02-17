@@ -44,7 +44,7 @@ def setup(
         start_challenging=True,
         team_size=starting_team_size,
         change_opponent=False,
-        starting_opponent="SimpleHeuristics",
+        starting_opponent="FixedHeuristics",
         team=teambuilder,
     )
 

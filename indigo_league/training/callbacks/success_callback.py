@@ -41,13 +41,13 @@ class SuccessCallback(sb3_callbacks.BaseCallback):
             self.logger.record(
                 f"trueskill/mu",
                 self.training_env.envs[0]
-                .env.matchmaker.agent_skills[self.training_env.envs[0].env.tag]
+                .env.matchmaker._agent_skills[self.training_env.envs[0].env.tag]
                 .mu,
             )
             self.logger.record(
                 f"trueskill/sigma",
                 self.training_env.envs[0]
-                .env.matchmaker.agent_skills[self.training_env.envs[0].env.tag]
+                .env.matchmaker._agent_skills[self.training_env.envs[0].env.tag]
                 .sigma,
             )
             if sum(league_agents_beat) >= 0.7 * self._n_league_agents:
