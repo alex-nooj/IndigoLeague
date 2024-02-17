@@ -12,7 +12,7 @@ mock_rating = trueskill.Rating(mu=25.0, sigma=8.333)
 agent_skills = {
     "Agent1": trueskill.Rating(mu=25.0, sigma=8.333),
     "Agent2": trueskill.Rating(mu=30.0, sigma=7.5),
-    "SimpleHeuristics": trueskill.Rating(mu=20.0, sigma=6.666),
+    "FixedHeuristics": trueskill.Rating(mu=20.0, sigma=6.666),
 }
 
 
@@ -54,16 +54,13 @@ def test_save_agent_skills(mock_league_path):
         assert saved_config["Agent2"]["sigma"] == 7.5
 
         assert (
-            "SimpleHeuristics" in saved_config
-        ), "Expected 'SimpleHeuristics' in saved config."
-        assert saved_config["SimpleHeuristics"]["mu"] == 20.0
-        assert saved_config["SimpleHeuristics"]["sigma"] == 6.666
+            "FixedHeuristics" in saved_config
+        ), "Expected 'FixedHeuristics' in saved config."
+        assert saved_config["FixedHeuristics"]["mu"] == 20.0
+        assert saved_config["FixedHeuristics"]["sigma"] == 6.666
 
 
 def test_incorrect_simple_heuristics_handling(mock_league_path):
-    # This test is to illustrate how you might test for incorrect handling
-    # of the 'SimpleHeuristics' agent. Given the provided code directly assigns
-    # the Rating object, this test is expected to fail without code correction.
     with patch("omegaconf.OmegaConf.save") as mock_save:
         save_agent_skills(mock_league_path, agent_skills)
 
@@ -79,5 +76,5 @@ def test_incorrect_simple_heuristics_handling(mock_league_path):
             saved_config = mock_save.call_args[0][0]  # The first positional argument
 
         # This assertion will fail with the current implementation
-        assert isinstance(saved_config["SimpleHeuristics"]["mu"], float)
-        assert isinstance(saved_config["SimpleHeuristics"]["sigma"], float)
+        assert isinstance(saved_config["FixedHeuristics"]["mu"], float)
+        assert isinstance(saved_config["FixedHeuristics"]["sigma"], float)
