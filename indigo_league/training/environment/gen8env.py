@@ -178,13 +178,17 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
                     f"Action {action} interpreted as a move "
                     + f"({list(battle.active_pokemon.moves.keys())[action]}"
                 )
-                return self.agent.create_order(list(battle.active_pokemon.moves.values())[action])
+                return self.agent.create_order(
+                    list(battle.active_pokemon.moves.values())[action]
+                )
             else:
                 self._logger.debug(
                     f"Action {action} interpreted as a switch "
                     + f"({list(battle.team.values())[action - NUM_MOVES]}"
                 )
-                return self.agent.create_order(list(battle.team.values())[action - NUM_MOVES])
+                return self.agent.create_order(
+                    list(battle.team.values())[action - NUM_MOVES]
+                )
         else:
             self._logger.debug(f"Had to choose random action (given {action})")
             return self.agent.choose_random_move(battle)
@@ -204,7 +208,9 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
 
     def switch_opponent(self):
         # Update the skill ratings and choose our next opponent
-        next_tag, player = self.matchmaker.update_and_choose(self._opp_tag, self.current_battle.won)
+        next_tag, player = self.matchmaker.update_and_choose(
+            self._opp_tag, self.current_battle.won
+        )
 
         if self.change_opponent:
             self._opp_tag = self._next_tag

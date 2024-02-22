@@ -27,15 +27,25 @@ SETUP_MOVES = {
 ANTI_HAZARDS_MOVES = {"rapidspin", "defog"}
 
 
-def check_hazard_move(move: Move, tgt_side_conditions: typing.Dict[SideCondition, int]) -> float:
-    return float(move.id in ENTRY_HAZARDS and ENTRY_HAZARDS[move.id] not in tgt_side_conditions)
+def check_hazard_move(
+    move: Move, tgt_side_conditions: typing.Dict[SideCondition, int]
+) -> float:
+    return float(
+        move.id in ENTRY_HAZARDS and ENTRY_HAZARDS[move.id] not in tgt_side_conditions
+    )
 
 
-def check_setup_move(move: Move, usr_side_conditions: typing.Dict[SideCondition, int]) -> float:
-    return float(move.id in SETUP_MOVES and SETUP_MOVES[move.id] not in usr_side_conditions)
+def check_setup_move(
+    move: Move, usr_side_conditions: typing.Dict[SideCondition, int]
+) -> float:
+    return float(
+        move.id in SETUP_MOVES and SETUP_MOVES[move.id] not in usr_side_conditions
+    )
 
 
-def check_removal_move(move: Move, usr_side_conditions: typing.Dict[SideCondition, int]) -> float:
+def check_removal_move(
+    move: Move, usr_side_conditions: typing.Dict[SideCondition, int]
+) -> float:
     return float(
         move.id in ANTI_HAZARDS_MOVES
         and any(k in usr_side_conditions for k in ENTRY_HAZARDS.values())
@@ -51,9 +61,19 @@ def check_boost_move(move: Move, boosts: typing.Dict[str, int]) -> float:
     ):
         return 1.0
 
+    if (
+        move.self_boost is not None
+        and sum(move.self_boost.values()) >= 2.0
+        and min([boosts[s] for s, v in move.boosts.items() if v > 0]) < 6
+    ):
+        return 1.0
+
     for effect in move.secondary:
         if "self" in effect and "boosts" in effect["self"]:
-            if min([boosts[s] for s, v in effect["self"]["boosts"].items() if v > 0]) < 6:
+            if (
+                min([boosts[s] for s, v in effect["self"]["boosts"].items() if v > 0])
+                < 6
+            ):
                 return 1.0
 
     return 0.0
@@ -111,7 +131,10 @@ def freeze_possible(tgt: Pokemon, weather: typing.Dict[Weather, int]) -> bool:
     ):
         return False
 
-    if tgt.ability is not None and format_str(tgt.ability) in ["comatose", "magmaarmor"]:
+    if tgt.ability is not None and format_str(tgt.ability) in [
+        "comatose",
+        "magmaarmor",
+    ]:
         return False
 
     return True
@@ -147,7 +170,9 @@ def poison_possible(usr: Pokemon, tgt: Pokemon) -> bool:
 
 
 def sleep_possible(
-    ability: typing.Optional[str], tgt_team: typing.List[Pokemon], field: typing.Dict[Field, int]
+    ability: typing.Optional[str],
+    tgt_team: typing.List[Pokemon],
+    field: typing.Dict[Field, int],
 ) -> bool:
     if Field.ELECTRIC_TERRAIN in field:
         return False

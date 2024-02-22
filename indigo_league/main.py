@@ -31,7 +31,7 @@ def setup(
 ):
     if teambuilder is None:
         teambuilder = asyncio.get_event_loop().run_until_complete(
-            genetic_team_search(20, 1, battle_format, 1)
+            genetic_team_search(20, 0, battle_format, 1)
         )
     teambuilder.save_team(poke_path.agent_dir)
     env = build_env(
@@ -41,9 +41,9 @@ def setup(
         **rewards,
         battle_format=battle_format,
         team_size=starting_team_size,
-        team=teambuilder,
         change_opponent=False,
         starting_opponent="FixedHeuristics",
+        team=teambuilder,
     )
 
     model = MaskablePPO(
@@ -62,6 +62,7 @@ def setup(
                 n_heads=8,
                 d_feedforward=1024,
                 dropout=0.0,
+                ensemble_size=5,
             ),
             net_arch=dict(pi=pi, vf=vf),
             activation_fn=torch.nn.LeakyReLU,

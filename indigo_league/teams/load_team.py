@@ -9,6 +9,9 @@ def load_team_from_file(filename: str) -> typing.List[str]:
     with open(filename, "r") as fp:
         contents = fp.read()
 
+    if len(contents) == 0:
+        return []
+
     return [
         p + "\n" if p[-1] != "\n" else p for p in contents.split("\n\n") if p != "\n"
     ]

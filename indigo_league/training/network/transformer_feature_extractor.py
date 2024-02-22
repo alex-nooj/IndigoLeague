@@ -6,6 +6,7 @@ import torch
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from torch import nn
 
+from indigo_league.training.network.dense_ensemble import EnsembleNetwork
 from indigo_league.training.network.pokemon_transformer import PokemonTransformer
 
 
@@ -29,6 +30,7 @@ class PokemonFeatureExtractor(BaseFeaturesExtractor):
         n_heads: int,
         d_feedforward: int,
         dropout: float = 0.0,
+        ensemble_size: int = 1,
     ):
         """Constructor function.
 
@@ -87,9 +89,22 @@ class PokemonFeatureExtractor(BaseFeaturesExtractor):
             in_vals = [input_size] + shared[:-1]
             layers.append(("Remove Seq Len", RemoveSeqLayer()))
 
-        for ix, (in_val, out_val) in enumerate(zip(in_vals, shared)):
-            layers.append((f"Linear {ix}", nn.Linear(in_val, out_val)))
-            layers.append((f"ReLU {ix}", nn.ReLU()))
+        if ensemble_size == 1:
+            for ix, (in_val, out_val) in enumerate(zip(in_vals, shared)):
+                layers.append((f"Linear {ix}", nn.Linear(in_val, out_val)))
+                layers.append((f"ReLU {ix}", nn.ReLU()))
+        else:
+            layers.append(
+                (
+                    "Ensemble Network",
+                    EnsembleNetwork(
+                        in_size=input_size,
+                        out_size=shared[-1],
+                        ensemble_size=ensemble_size,
+                        layer_sizes=shared[:-1],
+                    ),
+                )
+            )
         self.layers = nn.Sequential(OrderedDict(layers))
 
     def forward(self, obs: typing.Dict[str, torch.Tensor]) -> torch.Tensor:

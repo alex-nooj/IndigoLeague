@@ -6,6 +6,7 @@ import numpy as np
 
 from indigo_league.teams.utils.create_pokemon_str import create_pokemon_str
 from indigo_league.teams.utils.move_selection import safe_sample_moves
+from indigo_league.teams.utils.team_type_matchups import defense_matchups
 from indigo_league.utils.choose_from_dict import choose_from_dict
 
 
@@ -35,13 +36,25 @@ class SmogonData:
                         for m, v in self.smogon_data["data"][mon_name]["Moves"].items()
                         if m not in moves
                     }
+        self.smogon_data["data"] = dict(
+            sorted(
+                self.smogon_data["data"].items(),
+                key=lambda item: item[1]["Raw count"],
+                reverse=True,
+            )
+        )
 
     def random_pokemon(self, size=1) -> typing.List[str]:
-        return self._safe_sample_pokemon({k: 1 for k in self.smogon_data["data"]}, size=size)
+        return self._safe_sample_pokemon(
+            {k: 1 for k in self.smogon_data["data"]}, size=size
+        )
 
     def sample_pokemon(self, size: int = 1) -> typing.List[str]:
         return self._safe_sample_pokemon(
-            {k: self.smogon_data["data"][k]["Raw count"] for k in self.smogon_data["data"]},
+            {
+                k: self.smogon_data["data"][k]["Raw count"]
+                for k in self.smogon_data["data"]
+            },
             size=size,
         )
 
@@ -55,7 +68,9 @@ class SmogonData:
             team = []
 
         freq_dict = {}
-        for mon, v in self.smogon_data["data"][pokemon_name.lower()]["Teammates"].items():
+        for mon, v in self.smogon_data["data"][pokemon_name.lower()][
+            "Teammates"
+        ].items():
             if mon.lower() not in self.smogon_data["data"]:
                 continue
             for team_mon in team:
@@ -95,7 +110,9 @@ class SmogonData:
             pokemon_data["Moves"],
         )
 
-        return create_pokemon_str(pokemon_name.lower(), item, ability, evs, nature, moves)
+        return create_pokemon_str(
+            pokemon_name.lower(), item, ability, evs, nature, moves
+        )
 
     def _safe_sample_pokemon(
         self, freq_dict: typing.Dict[str, float], size: int
@@ -104,11 +121,15 @@ class SmogonData:
         values = np.asarray([v for v in freq_dict.values()])
         selection = []
         for _ in range(size):
-            selection.append(str(np.random.choice(keys, p=values / np.sum(values), size=1)[0]))
+            selection.append(
+                str(np.random.choice(keys, p=values / np.sum(values), size=1)[0])
+            )
 
             # We have to be careful because of pokemon like Rotom and Rotom-Wash
             keys = [
-                k for k in keys if selection[-1].rsplit("-")[0].lower() != k.rsplit("-")[0].lower()
+                k
+                for k in keys
+                if selection[-1].rsplit("-")[0].lower() != k.rsplit("-")[0].lower()
             ]
             values = np.asarray([freq_dict[k] for k in keys])
         return selection

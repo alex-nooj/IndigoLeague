@@ -6,7 +6,7 @@ from omegaconf import OmegaConf
 
 
 def load_config(
-    file_path: typing.Union[str, pathlib.Path], load_cli: typing.Optional[bool] = True
+    file_path: typing.Union[str, pathlib.Path], load_cli: bool = True
 ) -> typing.Dict[str, typing.Any]:
     """Function for loading configs from a yaml file.
 

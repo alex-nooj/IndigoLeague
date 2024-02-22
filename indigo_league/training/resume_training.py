@@ -4,8 +4,8 @@ import typing
 import torch
 from sb3_contrib import MaskablePPO
 
-from indigo_league.training.environment import Gen8Env
 from indigo_league.training.environment import build_env
+from indigo_league.training.environment import Gen8Env
 from indigo_league.utils.directory_helper import PokePath
 
 

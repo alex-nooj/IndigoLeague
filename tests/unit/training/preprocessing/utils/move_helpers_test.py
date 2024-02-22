@@ -12,15 +12,15 @@ from poke_env.environment import Weather
 from indigo_league.training.preprocessing.utils import move_helpers
 
 
+# def test_check_status_move():
+#     with patch("from indigo_league.training.preprocessing.utils.move_helpers.burn_possible", return_value=True) as burn_possible, \
+#             patch("from indigo_league.training.preprocessing.utils.move_helpers.freeze_possible",
+#                   return_value=True) as burn_possible, \
+#             patch("from indigo_league.training.preprocessing.utils.move_helpers.paralysis_possible",
+#                   return_value=True) as burn_possible, \
+#  \
+#             pass
 
-def test_check_status_move():
-    with patch("from indigo_league.training.preprocessing.utils.move_helpers.burn_possible", return_value=True) as burn_possible, \
-            patch("from indigo_league.training.preprocessing.utils.move_helpers.freeze_possible",
-                  return_value=True) as burn_possible, \
-            patch("from indigo_league.training.preprocessing.utils.move_helpers.paralysis_possible",
-                  return_value=True) as burn_possible, \
- \
-            pass
 
 @pytest.mark.parametrize(
     "names",
@@ -145,7 +145,11 @@ def test_check_removal_move(
         (Move("poweruppunch"), {"atk": 0.0}, 1.0),
         (Move("swordsdance"), {"atk": -1.0}, 1.0),
         (Move("swordsdance"), {"atk": 6.0}, 0.0),
-        (Move("screech"), {"atk": 0.0, "def": 0.0, "spa": 0.0, "spd": 0.0, "spe": 0.0}, 0.0),
+        (
+            Move("screech"),
+            {"atk": 0.0, "def": 0.0, "spa": 0.0, "spd": 0.0, "spe": 0.0},
+            0.0,
+        ),
         (Move("swordsdance"), {"atk": 0.0, "def": 3.0, "spe": 3.0}, 1.0),
     ],
 )
@@ -185,7 +189,10 @@ def test_burn_possible(tgt: Pokemon, ability: typing.Optional[str], expected: bo
     ],
 )
 def test_freeze_possible(
-    tgt: Pokemon, weather: typing.Dict[Weather, int], ability: typing.Optional[str], expected: bool
+    tgt: Pokemon,
+    weather: typing.Dict[Weather, int],
+    ability: typing.Optional[str],
+    expected: bool,
 ):
     tgt._ability = ability
 
@@ -218,15 +225,63 @@ def test_paralysis_possible(
         (Pokemon(species="snorlax"), None, Pokemon(species="ekans"), None, False),
         (Pokemon(species="snorlax"), None, Pokemon(species="beldum"), None, False),
         (Pokemon(species="snorlax"), "corrosion", Pokemon(species="ekans"), None, True),
-        (Pokemon(species="snorlax"), "corrosion", Pokemon(species="beldum"), None, True),
-        (Pokemon(species="snorlax"), None, Pokemon(species="snorlax"), "comatose", False),
-        (Pokemon(species="snorlax"), None, Pokemon(species="snorlax"), "immunity", False),
-        (Pokemon(species="snorlax"), None, Pokemon(species="snorlax"), "poisonheal", False),
+        (
+            Pokemon(species="snorlax"),
+            "corrosion",
+            Pokemon(species="beldum"),
+            None,
+            True,
+        ),
+        (
+            Pokemon(species="snorlax"),
+            None,
+            Pokemon(species="snorlax"),
+            "comatose",
+            False,
+        ),
+        (
+            Pokemon(species="snorlax"),
+            None,
+            Pokemon(species="snorlax"),
+            "immunity",
+            False,
+        ),
+        (
+            Pokemon(species="snorlax"),
+            None,
+            Pokemon(species="snorlax"),
+            "poisonheal",
+            False,
+        ),
         (Pokemon(species="snorlax"), None, Pokemon(species="snorlax"), "limber", True),
-        (Pokemon(species="snorlax"), "corrosion", Pokemon(species="snorlax"), "comatose", False),
-        (Pokemon(species="snorlax"), "corrosion", Pokemon(species="snorlax"), "immunity", False),
-        (Pokemon(species="snorlax"), "corrosion", Pokemon(species="snorlax"), "poisonheal", False),
-        (Pokemon(species="snorlax"), "corrosion", Pokemon(species="snorlax"), "limber", True),
+        (
+            Pokemon(species="snorlax"),
+            "corrosion",
+            Pokemon(species="snorlax"),
+            "comatose",
+            False,
+        ),
+        (
+            Pokemon(species="snorlax"),
+            "corrosion",
+            Pokemon(species="snorlax"),
+            "immunity",
+            False,
+        ),
+        (
+            Pokemon(species="snorlax"),
+            "corrosion",
+            Pokemon(species="snorlax"),
+            "poisonheal",
+            False,
+        ),
+        (
+            Pokemon(species="snorlax"),
+            "corrosion",
+            Pokemon(species="snorlax"),
+            "limber",
+            True,
+        ),
     ],
 )
 def test_poison_possible(

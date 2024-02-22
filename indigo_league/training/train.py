@@ -36,7 +36,7 @@ def curriculum(
     poke_path: PokePath,
     callback_list: sb3_callbacks.CallbackList,
 ):
-    for team_size in range(starting_team_size, final_team_size):
+    for team_size in range(starting_team_size, final_team_size + 1):
         print(f"Team Size: {team_size}")
         env.set_team_size(team_size)
         train(

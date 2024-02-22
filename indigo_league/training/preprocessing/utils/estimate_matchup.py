@@ -13,9 +13,9 @@ ADV_MAP = {
 
 
 def determine_type_advantage(mon: Pokemon, opponent: Pokemon) -> float:
-    return ADV_MAP[
-        round(max([opponent.damage_multiplier(t) for t in mon.types if t is not None]), 2)
-    ]
+    return (
+        max([opponent.damage_multiplier(t) for t in mon.types if t is not None]) / 4.0
+    )
 
 
 def determine_speed_tier(mon: Pokemon, opponent: Pokemon) -> float:
@@ -30,4 +30,6 @@ def determine_speed_tier(mon: Pokemon, opponent: Pokemon) -> float:
 
 
 def determine_remaining_mons(team: typing.Dict[str, Pokemon]) -> float:
-    return float(len([m for m in team.values() if m.fainted is False])) / float(NUM_POKEMON)
+    return float(len([m for m in team.values() if m.fainted is False])) / float(
+        NUM_POKEMON
+    )
