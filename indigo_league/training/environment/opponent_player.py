@@ -2,12 +2,14 @@ from collections import Counter
 
 import numpy as np
 import numpy.typing as npt
+from memory_profiler import profile
 from poke_env import PlayerConfiguration
 from poke_env.environment import AbstractBattle
 from poke_env.environment import Effect
 from poke_env.environment import Status
 from poke_env.player import BattleOrder
 from poke_env.player import Player
+from pympler import asizeof
 from sb3_contrib import MaskablePPO
 
 from indigo_league.teams.team_builder import AgentTeamBuilder
@@ -40,6 +42,7 @@ class OpponentPlayer(Player):
         )
         self._model = model
         self._preprocessor = preprocessor
+        print(__name__, asizeof.asizeof(self) / 1e9)
 
     def choose_move(self, battle: AbstractBattle) -> BattleOrder:
         obs = self._preprocessor.embed_battle(battle=battle)
@@ -78,3 +81,6 @@ class OpponentPlayer(Player):
                 battle.team[mon].status != Status.FNT and not battle.team[mon].active
             )
         return np.concatenate([moves, team])
+
+    def reset(self):
+        self._preprocessor.reset()

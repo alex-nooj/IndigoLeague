@@ -4,6 +4,7 @@ import typing
 
 import stable_baselines3.common.callbacks as sb3_callbacks
 import torch
+from memory_profiler import profile
 from sb3_contrib import MaskablePPO
 
 from indigo_league import training
@@ -22,6 +23,7 @@ def setup(
     rewards: typing.Dict[str, float],
     battle_format: str,
     seq_len: int,
+    ensemble_size: int,
     shared: typing.List[int],
     pi: typing.List[int],
     vf: typing.List[int],
@@ -62,7 +64,7 @@ def setup(
                 n_heads=8,
                 d_feedforward=1024,
                 dropout=0.0,
-                ensemble_size=5,
+                ensemble_size=ensemble_size,
             ),
             net_arch=dict(pi=pi, vf=vf),
             activation_fn=torch.nn.LeakyReLU,
@@ -78,6 +80,8 @@ def main(
     battle_format: str,
     total_timesteps: int,
     save_freq: int,
+    seq_len: int,
+    ensemble_size: int,
     shared: typing.List[int],
     pi: typing.List[int],
     vf: typing.List[int],
@@ -98,7 +102,8 @@ def main(
             ops=ops,
             rewards=rewards,
             battle_format=battle_format,
-            seq_len=1,
+            seq_len=seq_len,
+            ensemble_size=ensemble_size,
             shared=shared,
             pi=pi,
             vf=vf,
@@ -128,7 +133,7 @@ def main(
             callback_list=sb3_callbacks.CallbackList(
                 callback_list
                 + [
-                    callbacks.CurriculumCallback(threshold=0.5),
+                    callbacks.CurriculumCallback(),
                 ]
             ),
         )

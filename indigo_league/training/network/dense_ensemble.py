@@ -3,6 +3,7 @@ import typing
 from collections import OrderedDict
 
 import torch
+from pympler import asizeof
 from torch import nn
 
 
@@ -25,6 +26,9 @@ class DenseEnsembleLayer(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         y = x.matmul(self.weights) + self.bias
         return y
+
+
+from memory_profiler import profile
 
 
 class EnsembleNetwork(nn.Module):
@@ -58,6 +62,7 @@ class EnsembleNetwork(nn.Module):
             layers.append((f"relu{ix}", nn.LeakyReLU()))
         self.layers = nn.Sequential(OrderedDict(layers))
         self.average_pool = average_pool
+        print(__name__, asizeof.asizeof(self) / 1e9)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.average_pool:

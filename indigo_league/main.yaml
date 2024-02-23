@@ -2,21 +2,25 @@
 battle_format: gen8ou
 total_timesteps: 1_000_000
 save_freq: 50_000
-#resume: /media/alex/USB322FD/pokemon_league/challengers/Giovanni/keyboard_interrupt.zip
+#resume: /media/alex/USB322FD/pokemon_league/challengers/Sabrina/Sabrina_110000_steps.zip
 starting_team_size: 1
-team: /media/alex/USB322FD/pokemon_league/team.txt
+#team: /media/alex/USB322FD/pokemon_league/challengers/Sabrina/team.txt
+
+seq_len: 2
+ensemble_size: 3
 
 # Network
 shared:
-  - 64
-  - 64
-  - 64
+  - 256
+  - 256
+  - 128
+  - 128
 
 pi:
-  - 32
+  - 64
 
 vf:
-  - 32
+  - 64
 
 # Preprocessing
 ops:
@@ -28,13 +32,13 @@ ops:
 rewards:
   schedule: 50_000
   fainted_value:
-    value: 1.0
-    scale: 0.5
+    value: 0.4
+    scale: 0.9
   hp_value:
-    value: 0.5
+    value: 0.1
     scale: 0.3
   status_value:
-    value: 0.3
+    value: 0.1
     scale: 0.2
   victory_value:
     value: 1.0

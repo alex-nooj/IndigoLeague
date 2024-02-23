@@ -7,12 +7,14 @@ import numpy as np
 import numpy.typing as npt
 from poke_env.environment import AbstractBattle
 
+from indigo_league.utils.str_helpers import format_str
+
 
 class Op(abc.ABC):
     def __init__(self, seq_len: int, n_features: int, key: str):
         self.seq_len = seq_len
         self.n_features = n_features
-        self.key = key
+        self.key = format_str(key)
         self.frames = deque(maxlen=seq_len)
         self.reset()
 

@@ -5,8 +5,8 @@ import poke_env
 import trueskill
 from omegaconf import OmegaConf
 from tabulate import tabulate
-from utils.load_player import load_player
 
+from indigo_league.training.environment.utils.load_player import load_player
 from indigo_league.utils.directory_helper import PokePath
 
 
@@ -69,4 +69,4 @@ async def league_battle(battle_format: str, n_challenges: int):
 
 
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(league_battle("gen8ou", 10))
+    asyncio.get_event_loop().run_until_complete(league_battle("gen8ou", 20))

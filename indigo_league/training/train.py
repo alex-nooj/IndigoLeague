@@ -1,3 +1,4 @@
+from memory_profiler import profile
 from sb3_contrib import MaskablePPO
 from stable_baselines3.common import callbacks as sb3_callbacks
 
@@ -46,3 +47,4 @@ def curriculum(
             poke_path=poke_path,
             callback_list=callback_list,
         )
+        env.reset_battles()

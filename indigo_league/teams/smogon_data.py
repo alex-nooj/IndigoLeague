@@ -6,7 +6,6 @@ import numpy as np
 
 from indigo_league.teams.utils.create_pokemon_str import create_pokemon_str
 from indigo_league.teams.utils.move_selection import safe_sample_moves
-from indigo_league.teams.utils.team_type_matchups import defense_matchups
 from indigo_league.utils.choose_from_dict import choose_from_dict
 
 

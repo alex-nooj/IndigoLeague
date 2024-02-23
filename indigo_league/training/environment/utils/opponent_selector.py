@@ -3,10 +3,11 @@ import typing
 
 import numpy as np
 import trueskill
+from memory_profiler import profile
 from numpy import typing as npt
 from poke_env.player import Player
 
-from indigo_league.utils.load_player import load_player
+from indigo_league.training.environment.utils.load_player import load_player
 
 
 def qualities_to_probabilities(
@@ -58,5 +59,4 @@ class OpponentSelector:
             probs = qualities_to_probabilities(tag=self._tag, agent_skills=agent_skills)
 
         opponent_tag = str(np.random.choice(tags, p=probs))
-
         return opponent_tag, self._opps[opponent_tag]

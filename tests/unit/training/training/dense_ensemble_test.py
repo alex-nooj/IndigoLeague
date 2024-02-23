@@ -30,7 +30,9 @@ def test_ensemble_network_initialization():
         len(network.layers) == 6
     )  # Input layer + DenseEnsembleLayer + 1 Output Layer + 3 ReLU
     assert all(isinstance(network.layers[i * 2], DenseEnsembleLayer) for i in range(2))
-    assert all(isinstance(network.layers[i * 2 + 1], torch.nn.ReLU) for i in range(2))
+    assert all(
+        isinstance(network.layers[i * 2 + 1], torch.nn.LeakyReLU) for i in range(2)
+    )
 
 
 def test_ensemble_network_forward():

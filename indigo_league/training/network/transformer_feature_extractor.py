@@ -3,17 +3,20 @@ from collections import OrderedDict
 
 import gym
 import torch
+from pympler import asizeof
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from torch import nn
 
 from indigo_league.training.network.dense_ensemble import EnsembleNetwork
-from indigo_league.training.network.pokemon_transformer import PokemonTransformer
 
 
 class RemoveSeqLayer(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = torch.reshape(x, (x.shape[0], -1))
         return x
+
+
+from memory_profiler import profile
 
 
 class PokemonFeatureExtractor(BaseFeaturesExtractor):
@@ -25,12 +28,9 @@ class PokemonFeatureExtractor(BaseFeaturesExtractor):
         embedding_infos: typing.Dict[str, typing.Tuple[int, int, int]],
         seq_len: int,
         shared: typing.List[int],
-        n_linear_layers: int,
-        n_encoders: int,
-        n_heads: int,
-        d_feedforward: int,
-        dropout: float = 0.0,
         ensemble_size: int = 1,
+        *args,
+        **kwargs,
     ):
         """Constructor function.
 
@@ -64,30 +64,11 @@ class PokemonFeatureExtractor(BaseFeaturesExtractor):
                 input_size += subspace.shape[0]
         self.extractors = nn.ModuleDict(extractors)
         self.seq_len = seq_len
-        print(f"Input size: {input_size}")
         layers = []
-        if seq_len > 1:
-            print(f"Encoder size: {input_size // seq_len}")
-            layers = [
-                (
-                    "Transformer",
-                    PokemonTransformer(
-                        input_size,
-                        64,
-                        128,
-                        seq_len,
-                        n_encoders,
-                        n_heads,
-                        d_feedforward,
-                        dropout,
-                    ),
-                )
-            ]
-            in_vals = [64 * seq_len] + shared[:-1]
-        else:
-            print(f"Input size: {input_size * seq_len}")
-            in_vals = [input_size] + shared[:-1]
-            layers.append(("Remove Seq Len", RemoveSeqLayer()))
+        print(f"Input size: {input_size}")
+
+        in_vals = [input_size] + shared[:-1]
+        layers.append(("Remove Seq Len", RemoveSeqLayer()))
 
         if ensemble_size == 1:
             for ix, (in_val, out_val) in enumerate(zip(in_vals, shared)):
@@ -106,6 +87,7 @@ class PokemonFeatureExtractor(BaseFeaturesExtractor):
                 )
             )
         self.layers = nn.Sequential(OrderedDict(layers))
+        print(__name__, asizeof.asizeof(self) / 1e9)
 
     def forward(self, obs: typing.Dict[str, torch.Tensor]) -> torch.Tensor:
         """Forward function for the extractor.

@@ -12,16 +12,17 @@ from poke_env.environment import Battle
 from poke_env.player import BattleOrder
 from poke_env.player.openai_api import ActionType
 from poke_env.player.openai_api import ObservationType
+from pympler import asizeof
 
 from indigo_league.teams.team_builder import AgentTeamBuilder
 from indigo_league.training.environment.matchmaker import Matchmaker
 from indigo_league.training.environment.utils.action_masking import action_masks
+from indigo_league.training.environment.utils.load_player import load_player
 from indigo_league.training.environment.utils.reward_scheduler import RewardHelper
 from indigo_league.training.preprocessing.preprocessor import Preprocessor
 from indigo_league.utils.constants import NUM_MOVES
 from indigo_league.utils.constants import NUM_POKEMON
 from indigo_league.utils.directory_helper import PokePath
-from indigo_league.utils.load_player import load_player
 
 
 def build_env(
@@ -98,6 +99,7 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         self.change_opponent = change_opponent
         self._opp_tag = starting_opponent
         self._next_tag = starting_opponent
+        self.team = team
 
         super().__init__(
             battle_format=battle_format,
@@ -132,6 +134,8 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         )
         handler.setFormatter(formatter)
         self._logger.addHandler(handler)
+        print(__name__, asizeof.asizeof(self) / 1e9)
+        self._logger.debug(asizeof.asizeof(self))
 
     def calc_reward(self, last_battle, current_battle: AbstractBattle) -> float:
         return self.reward_computing_helper(
@@ -149,48 +153,54 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
     def step(
         self, action: ActionType
     ) -> typing.Tuple[ObservationType, float, bool, dict]:
-        self._logger.debug(f"Action: {action}")
+        # self._logger.debug(f"Action: {action}")
         obs, reward, done, info = super().step(action=action)
-        self._logger.debug(f"Obs: {obs}")
-        self._logger.debug(f"Reward: {reward}")
-        self._logger.debug(f"Done: {done}")
+        # self._logger.debug(f"Obs: {obs}")
+        # self._logger.debug(f"Reward: {reward}")
+        # self._logger.debug(f"Done: {done}")
         if done:
+            info["win"] = {
+                "opp": self._opp_tag,
+                "result": self.current_battle.won,
+            }
             self.update_win_rates()
             self.switch_opponent()
-
+        info["team_size"] = self.team_size
         return obs, reward, done, info
 
     def reset(self, *args, **kwargs) -> typing.Dict[str, npt.NDArray]:
         # Reset the preprocessor
         self.preprocessor.reset()
+        self.reset_battles()
+        self._logger.debug(asizeof.asizeof(self))
         return super().reset(*args, **kwargs)
 
     def action_masks(self, *args, **kwargs) -> npt.NDArray:
         mask = action_masks(self.current_battle)
-        self._logger.debug(f"Mask: {mask}")
+        # self._logger.debug(f"Mask: {mask}")
         return mask
 
     def action_to_move(self, action: int, battle: Battle) -> BattleOrder:
         action_mask = self.action_masks()
         if action_mask[action]:
             if action < NUM_MOVES:
-                self._logger.debug(
-                    f"Action {action} interpreted as a move "
-                    + f"({list(battle.active_pokemon.moves.keys())[action]}"
-                )
+                # self._logger.debug(
+                #     f"Action {action} interpreted as a move "
+                #     + f"({list(battle.active_pokemon.moves.keys())[action]}"
+                # )
                 return self.agent.create_order(
                     list(battle.active_pokemon.moves.values())[action]
                 )
             else:
-                self._logger.debug(
-                    f"Action {action} interpreted as a switch "
-                    + f"({list(battle.team.values())[action - NUM_MOVES]}"
-                )
+                # self._logger.debug(
+                #     f"Action {action} interpreted as a switch "
+                #     + f"({list(battle.team.values())[action - NUM_MOVES]}"
+                # )
                 return self.agent.create_order(
                     list(battle.team.values())[action - NUM_MOVES]
                 )
         else:
-            self._logger.debug(f"Had to choose random action (given {action})")
+            # self._logger.debug(f"Had to choose random action (given {action})")
             return self.agent.choose_random_move(battle)
 
     def set_team_size(self, team_size: int):
@@ -218,3 +228,8 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
                 self._next_tag = next_tag
                 self.set_opponent(player)
             self._next_tag = next_tag
+
+    def reset_battles(self):
+        self.agent._battles = {
+            k: v for k, v in self.agent._battles.items() if not v.finished
+        }

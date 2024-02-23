@@ -3,8 +3,8 @@ import pathlib
 
 import utils
 
+from indigo_league.training.environment.utils.load_player import load_player
 from indigo_league.utils.directory_helper import PokePath
-from indigo_league.utils.load_player import load_player
 
 
 async def battle_human(
