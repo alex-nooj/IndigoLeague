@@ -3,9 +3,7 @@ import typing
 import gym
 import numpy as np
 import numpy.typing as npt
-from memory_profiler import profile
 from poke_env.environment import AbstractBattle
-from pympler import asizeof
 
 from indigo_league.training.preprocessing.op import Op
 
@@ -17,7 +15,6 @@ class EmbedActiveIdx(Op):
             n_features=6,
             key="active_idx",
         )
-        print(__name__, asizeof.asizeof(self) / 1e9)
 
     def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]

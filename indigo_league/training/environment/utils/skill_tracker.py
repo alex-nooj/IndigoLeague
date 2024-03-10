@@ -2,7 +2,6 @@ import pathlib
 import typing
 
 import trueskill
-from memory_profiler import profile
 from omegaconf import OmegaConf
 
 

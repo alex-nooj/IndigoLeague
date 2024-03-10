@@ -29,7 +29,7 @@ async def genetic_team_search(
             )
             for team in teams
         ]
-        cross_evaluation = await cross_evaluate(players, n_challenges=10)
+        cross_evaluation = await cross_evaluate(players, n_challenges=5)
 
         team_scores = []
         for p_1, results in cross_evaluation.items():
@@ -50,6 +50,7 @@ async def genetic_team_search(
         print(f"Generation {generation}: Highest score: {highest_win_rate:0.2f}")
     print("=== Best Team ===")
     print(teams[-1].team)
+    del players
     team = AgentTeamBuilder(battle_format, NUM_POKEMON)
     team.set_team(list(teams[-1].mons_dict.values()))
     return team

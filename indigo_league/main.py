@@ -1,10 +1,11 @@
+# import tracemalloc
+# tracemalloc.start()
 import asyncio
 import pathlib
 import typing
 
 import stable_baselines3.common.callbacks as sb3_callbacks
 import torch
-from memory_profiler import profile
 from sb3_contrib import MaskablePPO
 
 from indigo_league import training
@@ -33,7 +34,7 @@ def setup(
 ):
     if teambuilder is None:
         teambuilder = asyncio.get_event_loop().run_until_complete(
-            genetic_team_search(20, 0, battle_format, 1)
+            genetic_team_search(30, 10, battle_format, 3)
         )
     teambuilder.save_team(poke_path.agent_dir)
     env = build_env(
@@ -69,6 +70,7 @@ def setup(
             net_arch=dict(pi=pi, vf=vf),
             activation_fn=torch.nn.LeakyReLU,
         ),
+        n_steps=1024,
     )
 
     return env, model
@@ -97,7 +99,7 @@ def main(
         )
     else:
         poke_path = PokePath(tag=tag)
-
+        # s1 = tracemalloc.take_snapshot()
         env, model = setup(
             ops=ops,
             rewards=rewards,
@@ -111,7 +113,14 @@ def main(
             poke_path=poke_path,
             teambuilder=teambuilder,
         )
+        # s2 = tracemalloc.take_snapshot()
+        #
+        # top_stats = s2.compare_to(s1, "lineno")
+        # for stat in top_stats[:50]:
+        #     print(stat)
+        # print("\n\n")
 
+    print(f"Saving to: {poke_path.agent_dir}")
     checkpoint_callback = sb3_callbacks.CheckpointCallback(
         save_freq,
         save_path=str(poke_path.agent_dir),
@@ -122,8 +131,9 @@ def main(
         callbacks.SavePeripheralsCallback(poke_path=poke_path, save_freq=save_freq),
     ]
 
+    starting_step = 0
     if starting_team_size != final_team_size:
-        training.curriculum(
+        starting_step = training.curriculum(
             env=env,
             model=model,
             starting_team_size=starting_team_size,
@@ -133,10 +143,11 @@ def main(
             callback_list=sb3_callbacks.CallbackList(
                 callback_list
                 + [
-                    callbacks.CurriculumCallback(),
+                    callbacks.CurriculumCallback(poke_path.agent_dir),
                 ]
             ),
         )
+
     env.set_team_size(final_team_size)
     env.change_opponent = True
 
@@ -153,6 +164,7 @@ def main(
                 )
             ]
         ),
+        starting_step=starting_step,
     )
 
 
@@ -171,3 +183,8 @@ if __name__ == "__main__":
             print("Could not open team file!")
         del cfg["team"]
     main(**cfg)
+    # snapshot = tracemalloc.take_snapshot()
+    # top_stats = snapshot.statistics("lineno")
+    #
+    # for stat in top_stats[:50]:
+    #     print(stat)

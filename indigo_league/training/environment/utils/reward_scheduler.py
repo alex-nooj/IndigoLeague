@@ -1,7 +1,5 @@
 import typing
 
-from memory_profiler import profile
-
 
 class RewardScheduler:
     """Handles the scaling of a single reward value.

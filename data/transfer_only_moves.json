@@ -139,5 +139,6 @@
   "zapdos": ["whirlwind", "curse", "tailwind"],
   "weavile": ["detect", "curse"],
   "magnezone": ["teleport", "curse"],
+  "slowbro": ["reflect"],
   "mew": ["vacuumwave", "whirlwind", "nightshade", "tailwind", "fakeout", "confusion", "aquatail", "suckerpunch", "detect"]
 }

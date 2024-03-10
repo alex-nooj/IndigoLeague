@@ -3,9 +3,7 @@ import typing
 
 import gym
 import numpy.typing as npt
-from memory_profiler import profile
 from poke_env.environment import AbstractBattle
-from pympler import asizeof
 
 
 def dynamic_import(target: str) -> typing.Callable:
@@ -30,7 +28,6 @@ class Preprocessor:
             self._obs_space.update(op.describe_embedding())
             self._embedding_infos.update(op.embedding_infos())
         self._obs_space = gym.spaces.Dict(self._obs_space)
-        print(__name__, asizeof.asizeof(self) / 1e9)
 
     def embed_battle(self, battle: AbstractBattle) -> typing.Dict[str, npt.NDArray]:
         state = {}

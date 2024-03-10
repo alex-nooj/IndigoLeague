@@ -1,4 +1,5 @@
-from memory_profiler import profile
+import gc
+
 from sb3_contrib import MaskablePPO
 from stable_baselines3.common import callbacks as sb3_callbacks
 
@@ -12,11 +13,12 @@ def train(
     total_timesteps: int,
     poke_path: PokePath,
     callback_list: sb3_callbacks.CallbackList,
-):
+    starting_step: int = 0,
+) -> int:
     try:
         model.set_env(env)
         model.learn(
-            total_timesteps=total_timesteps,
+            total_timesteps=total_timesteps - starting_step,
             callback=callback_list,
             reset_num_timesteps=False,
         )
@@ -27,6 +29,8 @@ def train(
         model.save(str(poke_path.agent_dir / f"runtime_error.zip"))
         raise e
 
+    return model.num_timesteps
+
 
 def curriculum(
     env: Gen8Env,
@@ -36,7 +40,10 @@ def curriculum(
     total_timesteps: int,
     poke_path: PokePath,
     callback_list: sb3_callbacks.CallbackList,
-):
+) -> int:
+    # tracemalloc.start()
+
+    starting_step = 0
     for team_size in range(starting_team_size, final_team_size + 1):
         print(f"Team Size: {team_size}")
         env.set_team_size(team_size)
@@ -46,5 +53,14 @@ def curriculum(
             total_timesteps=total_timesteps,
             poke_path=poke_path,
             callback_list=callback_list,
+            starting_step=starting_step,
         )
         env.reset_battles()
+        gc.collect()  # Poke Env's JSON decoders don't go away on their own
+        # snapshot = tracemalloc.take_snapshot()
+        # top_stats = snapshot.statistics("lineno")
+        # print("[ Top 10 ]")
+        # for stat in top_stats[:10]:
+        #     print(stat)
+
+    return starting_step

@@ -3,7 +3,6 @@ import typing
 
 import numpy as np
 import trueskill
-from memory_profiler import profile
 from numpy import typing as npt
 from poke_env.player import Player
 
@@ -33,20 +32,11 @@ class OpponentSelector:
         battle_format: str,
         league_path: pathlib.Path,
         team_size: int,
-        agent_skills: typing.Dict[str, trueskill.Rating],
     ):
         self._tag = tag
         self._battle_format = battle_format
-        self._opps = {
-            opp_tag: load_player(
-                tag=opp_tag,
-                league_path=league_path,
-                battle_format=battle_format,
-                team_size=team_size,
-            )
-            for opp_tag in agent_skills.keys()
-            if opp_tag != tag
-        }
+        self.league_path = league_path
+        self.team_size = team_size
 
     def choose(
         self,
@@ -59,4 +49,10 @@ class OpponentSelector:
             probs = qualities_to_probabilities(tag=self._tag, agent_skills=agent_skills)
 
         opponent_tag = str(np.random.choice(tags, p=probs))
-        return opponent_tag, self._opps[opponent_tag]
+        opp = load_player(
+            tag=opponent_tag,
+            league_path=self.league_path,
+            battle_format=self._battle_format,
+            team_size=self.team_size,
+        )
+        return opponent_tag, opp

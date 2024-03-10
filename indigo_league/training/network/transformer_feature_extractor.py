@@ -3,7 +3,6 @@ from collections import OrderedDict
 
 import gym
 import torch
-from pympler import asizeof
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from torch import nn
 
@@ -14,9 +13,6 @@ class RemoveSeqLayer(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = torch.reshape(x, (x.shape[0], -1))
         return x
-
-
-from memory_profiler import profile
 
 
 class PokemonFeatureExtractor(BaseFeaturesExtractor):
@@ -87,7 +83,6 @@ class PokemonFeatureExtractor(BaseFeaturesExtractor):
                 )
             )
         self.layers = nn.Sequential(OrderedDict(layers))
-        print(__name__, asizeof.asizeof(self) / 1e9)
 
     def forward(self, obs: typing.Dict[str, torch.Tensor]) -> torch.Tensor:
         """Forward function for the extractor.

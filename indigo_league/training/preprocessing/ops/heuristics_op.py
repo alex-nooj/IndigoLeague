@@ -2,11 +2,9 @@ import typing
 
 import gym
 import numpy as np
-from memory_profiler import profile
 from numpy import typing as npt
 from poke_env.environment import AbstractBattle
 from poke_env.environment import Pokemon
-from pympler import asizeof
 
 from indigo_league.training.preprocessing.op import Op
 from indigo_league.training.preprocessing.utils import calc_move_damage
@@ -83,7 +81,6 @@ class HeuristicsOp(Op):
             n_features=5 + NUM_MOVES * 7 + NUM_POKEMON * 4,
             key="HeuristicsOp",
         )
-        print(__name__, asizeof.asizeof(self) / 1e9)
 
     def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]

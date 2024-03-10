@@ -22,6 +22,9 @@ class SuccessCallback(sb3_callbacks.BaseCallback):
         for d in league_dir.iterdir():
             if d.is_dir():
                 self.win_rates[d.stem] = collections.deque(maxlen=100)
+        print("== League Agent ==")
+        for k in self.win_rates:
+            print(k)
 
     def _on_step(self) -> bool:
         infos = self.locals["infos"]
@@ -30,9 +33,13 @@ class SuccessCallback(sb3_callbacks.BaseCallback):
             if "win" in info:
                 wins_updated = True
                 self.win_rates[info["win"]["opp"]].append(int(info["win"]["result"]))
+                for k, v in self.win_rates.items():
+                    self.logger.record(f"win_rates/{k}", sum(v))
 
         if wins_updated:
-            win_totals = sum([sum(v) >= 0.6 for v in self.win_rates.values()])
+            win_totals = sum(
+                [sum(v) >= (0.6 * v.maxlen) for v in self.win_rates.values()]
+            )
             self.logger.record("league/success_rate", win_totals / len(self.win_rates))
             if win_totals >= 0.7 * len(self.win_rates):
                 (self._league_dir / self._tag).mkdir(parents=True, exist_ok=True)
@@ -51,10 +58,6 @@ class SuccessCallback(sb3_callbacks.BaseCallback):
                     },
                     self._league_dir / self._tag / "team.pth",
                 )
-                if hasattr(self.model.env, "envs"):
-                    for env in self.model.env.envs:
-                        env.env.matchmaker.save()
-                        env.env.close()
                 return False
         return True
 

@@ -2,9 +2,7 @@ import pathlib
 import typing
 
 import trueskill
-from memory_profiler import profile
 from poke_env.player import Player
-from pympler import asizeof
 
 from indigo_league.training.environment.utils.opponent_selector import OpponentSelector
 from indigo_league.training.environment.utils.save_agent_skills import save_agent_skills
@@ -21,14 +19,12 @@ class Matchmaker:
             battle_format=battle_format,
             league_path=league_path,
             team_size=team_size,
-            agent_skills=self._skill_tracker.agent_skills,
         )
 
         self._tag = tag
         self._battle_format = battle_format
         self._league_path = league_path
         self.team_size = team_size
-        print(__name__, asizeof.asizeof(self) / 1e9)
 
     def update_and_choose(
         self, opponent: str, battle_won: bool
@@ -46,7 +42,6 @@ class Matchmaker:
             battle_format=self._battle_format,
             league_path=self._league_path,
             team_size=team_size,
-            agent_skills=self._skill_tracker.agent_skills,
         )
 
     @property

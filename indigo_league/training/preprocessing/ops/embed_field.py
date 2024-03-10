@@ -3,11 +3,9 @@ import typing
 import gym
 import numpy as np
 import numpy.typing as npt
-from memory_profiler import profile
 from poke_env.environment import AbstractBattle
 from poke_env.environment import Field
 from poke_env.environment import SideCondition
-from pympler import asizeof
 
 from indigo_league.training.preprocessing.op import Op
 
@@ -39,7 +37,6 @@ class EmbedField(Op):
     def __init__(self, seq_len: int):
         n_features = 2 * len(MEANINGFUL_SIDE_CONDITIONS) + len(MEANINGFUL_FIELD)
         super().__init__(seq_len=seq_len, n_features=n_features, key="field")
-        print(__name__, asizeof.asizeof(self) / 1e9)
 
     def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]

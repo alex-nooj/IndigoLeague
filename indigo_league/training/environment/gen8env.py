@@ -12,7 +12,6 @@ from poke_env.environment import Battle
 from poke_env.player import BattleOrder
 from poke_env.player.openai_api import ActionType
 from poke_env.player.openai_api import ObservationType
-from pympler import asizeof
 
 from indigo_league.teams.team_builder import AgentTeamBuilder
 from indigo_league.training.environment.matchmaker import Matchmaker
@@ -23,6 +22,8 @@ from indigo_league.training.preprocessing.preprocessor import Preprocessor
 from indigo_league.utils.constants import NUM_MOVES
 from indigo_league.utils.constants import NUM_POKEMON
 from indigo_league.utils.directory_helper import PokePath
+
+SELF_COUNTER = collections.Counter()
 
 
 def build_env(
@@ -91,20 +92,26 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         starting_opponent: str = "FixedHeuristics",
         **kwargs,
     ):
+        self.poke_path = poke_path
         self.preprocessor = preprocessor
+        self.reward_helper = reward_helper
         self.matchmaker = matchmaker
+        self.battle_format = battle_format
+        self.team = team
         self.league_path = poke_path.league_dir
         self.team_size = team.team_size
         self.win_rates = {}
         self.change_opponent = change_opponent
         self._opp_tag = starting_opponent
         self._next_tag = starting_opponent
-        self.team = team
 
+        SELF_COUNTER.update([poke_path.tag])
         super().__init__(
             battle_format=battle_format,
             team=team,
-            player_configuration=PlayerConfiguration(poke_path.tag, None),
+            player_configuration=PlayerConfiguration(
+                f"{poke_path.tag} {SELF_COUNTER[poke_path.tag]}", None
+            ),
             opponent=load_player(
                 tag=starting_opponent,
                 league_path=poke_path.league_dir,
@@ -115,7 +122,6 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
             **kwargs,
         )
         self._tag = poke_path.tag
-        self._reward_helper = reward_helper
 
         self.tag = poke_path.tag.split(" ")[0]
 
@@ -134,14 +140,12 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         )
         handler.setFormatter(formatter)
         self._logger.addHandler(handler)
-        print(__name__, asizeof.asizeof(self) / 1e9)
-        self._logger.debug(asizeof.asizeof(self))
 
     def calc_reward(self, last_battle, current_battle: AbstractBattle) -> float:
         return self.reward_computing_helper(
             battle=current_battle,
             number_of_pokemons=self.team_size,
-            **self._reward_helper.reward_values,
+            **self.reward_helper.reward_values,
         )
 
     def embed_battle(self, battle: AbstractBattle) -> typing.Dict[str, npt.NDArray]:
@@ -164,7 +168,8 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
                 "result": self.current_battle.won,
             }
             self.update_win_rates()
-            self.switch_opponent()
+            if self.change_opponent:
+                self.switch_opponent()
         info["team_size"] = self.team_size
         return obs, reward, done, info
 
@@ -172,7 +177,6 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         # Reset the preprocessor
         self.preprocessor.reset()
         self.reset_battles()
-        self._logger.debug(asizeof.asizeof(self))
         return super().reset(*args, **kwargs)
 
     def action_masks(self, *args, **kwargs) -> npt.NDArray:
@@ -221,13 +225,11 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
         next_tag, player = self.matchmaker.update_and_choose(
             self._opp_tag, self.current_battle.won
         )
-
-        if self.change_opponent:
-            self._opp_tag = self._next_tag
-            if next_tag != self._next_tag:
-                self._next_tag = next_tag
-                self.set_opponent(player)
+        self._opp_tag = self._next_tag
+        if next_tag != self._next_tag:
             self._next_tag = next_tag
+            self.set_opponent(player)
+        self._next_tag = next_tag
 
     def reset_battles(self):
         self.agent._battles = {

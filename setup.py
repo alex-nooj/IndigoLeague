@@ -1,10 +1,12 @@
+from setuptools import find_packages
 from setuptools import setup
 
 setup(
     name="indigo_league",
     version="0.0.1",
-    packages=[""],
     url="",
+    packages=find_packages(where=".", exclude=["data*", "htmlcov*", "third_party*"]),
+    package_dir={"": "."},  # Specify the root directory
     license="",
     author="Alex Newgent",
     author_email="",
