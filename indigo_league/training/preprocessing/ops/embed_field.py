@@ -6,36 +6,51 @@ import numpy.typing as npt
 from poke_env.environment import AbstractBattle
 from poke_env.environment import Field
 from poke_env.environment import SideCondition
-from poke_env.environment import Weather
 
 from indigo_league.training.preprocessing.op import Op
+
+MEANINGFUL_SIDE_CONDITIONS = [
+    SideCondition.AURORA_VEIL,
+    SideCondition.LIGHT_SCREEN,
+    SideCondition.REFLECT,
+    SideCondition.SAFEGUARD,
+    SideCondition.SPIKES,
+    SideCondition.STEALTH_ROCK,
+    SideCondition.STICKY_WEB,
+    SideCondition.TAILWIND,
+    SideCondition.TOXIC_SPIKES,
+]
+
+
+MEANINGFUL_FIELD = [
+    Field.ELECTRIC_TERRAIN,
+    Field.GRASSY_TERRAIN,
+    Field.MAGIC_ROOM,
+    Field.MISTY_TERRAIN,
+    Field.PSYCHIC_TERRAIN,
+    Field.TRICK_ROOM,
+    Field.WONDER_ROOM,
+]
 
 
 class EmbedField(Op):
     def __init__(self, seq_len: int):
-        n_features = len(Weather) + 2 * len(SideCondition) + len(Field)
+        n_features = 2 * len(MEANINGFUL_SIDE_CONDITIONS) + len(MEANINGFUL_FIELD)
         super().__init__(seq_len=seq_len, n_features=n_features, key="field")
 
     def _embed_battle(
         self, battle: AbstractBattle, state: typing.Dict[str, npt.NDArray]
     ) -> typing.List[float]:
-        weather_vec = [0.0 for _ in Weather]
-        for weather in battle.weather:
-            weather_vec[weather.value - 1] = 1.0
+        side_conditions = [
+            float(s in battle.side_conditions) for s in MEANINGFUL_SIDE_CONDITIONS
+        ]
+        opp_side_conditions = [
+            float(s in battle.opponent_side_conditions)
+            for s in MEANINGFUL_SIDE_CONDITIONS
+        ]
+        field = [float(f in battle.fields) for f in MEANINGFUL_FIELD]
 
-        side_conditions = [0.0 for _ in SideCondition]
-        for side_condition in battle.side_conditions:
-            side_conditions[side_condition.value - 1] = 1.0
-
-        opp_side_conditions = [0.0 for _ in SideCondition]
-        for side_condition in battle.opponent_side_conditions:
-            opp_side_conditions[side_condition.value - 1] = 1.0
-
-        field = [0.0 for _ in Field]
-        for field_effect in battle.fields:
-            field[field_effect.value - 1] = 1.0
-
-        return weather_vec + side_conditions + opp_side_conditions + field
+        return side_conditions + opp_side_conditions + field
 
     def describe_embedding(self) -> gym.spaces.Dict:
         """Describes the output of the observation space for this op.

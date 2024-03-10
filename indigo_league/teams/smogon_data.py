@@ -4,8 +4,9 @@ import typing
 
 import numpy as np
 
-from indigo_league.utils.constants import NUM_MOVES
-from indigo_league.utils.str_helpers import format_str
+from indigo_league.teams.utils.create_pokemon_str import create_pokemon_str
+from indigo_league.teams.utils.move_selection import safe_sample_moves
+from indigo_league.utils.choose_from_dict import choose_from_dict
 
 
 class SmogonData:
@@ -34,6 +35,13 @@ class SmogonData:
                         for m, v in self.smogon_data["data"][mon_name]["Moves"].items()
                         if m not in moves
                     }
+        self.smogon_data["data"] = dict(
+            sorted(
+                self.smogon_data["data"].items(),
+                key=lambda item: item[1]["Raw count"],
+                reverse=True,
+            )
+        )
 
     def random_pokemon(self, size=1) -> typing.List[str]:
         return self._safe_sample_pokemon(
@@ -92,7 +100,14 @@ class SmogonData:
         evs = evs_nature.rsplit(":")[-1].rsplit("/")
 
         # Pick moves
-        moves = safe_sample_moves(pokemon_name.lower(), pokemon_data["Moves"])
+        moves = safe_sample_moves(
+            pokemon_name.lower(),
+            ability.lower(),
+            item.lower(),
+            evs,
+            nature.lower(),
+            pokemon_data["Moves"],
+        )
 
         return create_pokemon_str(
             pokemon_name.lower(), item, ability, evs, nature, moves
@@ -117,72 +132,3 @@ class SmogonData:
             ]
             values = np.asarray([freq_dict[k] for k in keys])
         return selection
-
-
-def safe_sample_moves(
-    pokemon_name: str, moves: typing.Dict[str, float]
-) -> typing.List[str]:
-    moves = {k: v for k, v in moves.items() if k not in ["", "teleport", "zapcannon"]}
-
-    if pokemon_name.lower() == "ditto":
-        return ["transform"]
-    else:
-        return choose_from_dict(moves, NUM_MOVES)
-
-
-def remove_incompatible_moves(
-    moves: typing.Dict[str, float], incompatible_moves: typing.List[str]
-) -> typing.List[str]:
-    keys = [k for k in moves if len(k) != 0 and format_str(k) not in incompatible_moves]
-    values = np.asarray([v for k, v in moves.items() if k in keys])
-    return list(np.random.choice(keys, p=values / np.sum(values), size=NUM_MOVES))
-
-
-def choose_from_dict(
-    freq_dict: typing.Dict[str, float], size: int = 1
-) -> typing.List[str]:
-    keys = []
-    values = []
-    for k, v in freq_dict.items():
-        if len(k) != 0:
-            keys.append(k)
-            values.append(v)
-
-    values = np.asarray(values)
-    return list(
-        np.random.choice(keys, size=size, replace=False, p=values / np.sum(values))
-    )
-
-
-def create_pokemon_str(
-    name: str,
-    item: str,
-    ability: str,
-    evs: typing.List[str],
-    nature: str,
-    moves: typing.List[str],
-) -> str:
-    mon_name = "-".join([s.capitalize() for s in name.rsplit("-")])
-    if item == "nothing":
-        pokemon_str = f"{mon_name}\nAbility: {ability}\n"
-    else:
-        pokemon_str = f"{mon_name} @ {item}\nAbility: {ability}\n"
-    if any([k != "0" for k in evs]):
-        ev_str = "EVs:"
-        for ev, stat in zip(evs, ["HP", "Atk", "Def", "SpA", "SpD", "Spe"]):
-            if ev != "0":
-                ev_str += f" {ev} {stat} /"
-        # Trim the final backslash
-        ev_str = ev_str[:-1] + "\n"
-    else:
-        ev_str = "EVs:"
-        for stat in ["HP", "Atk", "Def", "SpA", "SpD", "Spe"]:
-            ev_str += f" 1 {stat} /"
-        # Trim the final backslash
-        ev_str = ev_str[:-1] + "\n"
-    nature_str = f"{nature} Nature\n"
-    move_str = ""
-    for move in moves:
-        move_str += f"- {move}\n"
-
-    return pokemon_str + ev_str + nature_str + move_str

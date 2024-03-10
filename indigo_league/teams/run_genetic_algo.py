@@ -3,6 +3,7 @@ from poke_env.player import cross_evaluate
 
 from indigo_league.teams.genetic_team_builder import GeneticTeamBuilder
 from indigo_league.teams.team_builder import AgentTeamBuilder
+from indigo_league.teams.utils.team_type_matchups import defense_matchups
 from indigo_league.utils.constants import NUM_POKEMON
 from indigo_league.utils.fixed_heuristics_player import FixedHeuristicsPlayer
 
@@ -11,21 +12,24 @@ async def genetic_team_search(
     population_size: int, n_mutations: int, battle_format: str, n_gens: int
 ) -> AgentTeamBuilder:
     # Step 1: Generate N random teams
-    teams = [
-        GeneticTeamBuilder(mode=np.random.choice(["random", "sample", "teammate"]))
-        for _ in range(population_size)
-    ]
+    teams = []
+    while len(teams) < population_size:
+        team = GeneticTeamBuilder(
+            mode=np.random.choice(["random", "sample", "teammate"])
+        )
+        if all(v < 2.0 for v in defense_matchups(list(team.mons_dict.keys())).values()):
+            teams.append(team)
 
     for generation in range(n_gens):
+
+        # Step 2: Evaluation
         players = [
             FixedHeuristicsPlayer(
                 battle_format=battle_format, max_concurrent_battles=10, team=team
             )
             for team in teams
         ]
-
-        # Step 2: Have each team battle each other
-        cross_evaluation = await cross_evaluate(players, n_challenges=10)
+        cross_evaluation = await cross_evaluate(players, n_challenges=5)
 
         team_scores = []
         for p_1, results in cross_evaluation.items():
@@ -46,6 +50,7 @@ async def genetic_team_search(
         print(f"Generation {generation}: Highest score: {highest_win_rate:0.2f}")
     print("=== Best Team ===")
     print(teams[-1].team)
+    del players
     team = AgentTeamBuilder(battle_format, NUM_POKEMON)
     team.set_team(list(teams[-1].mons_dict.values()))
     return team

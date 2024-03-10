@@ -7,7 +7,7 @@ import numpy as np
 from poke_env.teambuilder.teambuilder import Teambuilder
 
 from indigo_league.utils.constants import NUM_POKEMON
-from indigo_league.utils.smogon_data import SmogonData
+from indigo_league.teams.smogon_data import SmogonData
 
 
 def generate_random_team(team_size: int) -> typing.List[str]:

@@ -11,7 +11,7 @@ from indigo_league.teams.load_team import load_team_from_file
 from indigo_league.teams.run_genetic_algo import genetic_team_search
 from indigo_league.teams.team_builder import AgentTeamBuilder
 from indigo_league.training import callbacks
-from indigo_league.training.environment import Gen8Env
+from indigo_league.training.environment import build_env
 from indigo_league.training.network import PokemonFeatureExtractor
 from indigo_league.utils import load_config
 from indigo_league.utils.directory_helper import PokePath
@@ -22,6 +22,7 @@ def setup(
     rewards: typing.Dict[str, float],
     battle_format: str,
     seq_len: int,
+    ensemble_size: int,
     shared: typing.List[int],
     pi: typing.List[int],
     vf: typing.List[int],
@@ -31,20 +32,18 @@ def setup(
 ):
     if teambuilder is None:
         teambuilder = asyncio.get_event_loop().run_until_complete(
-            genetic_team_search(20, 1, battle_format, 1)
+            genetic_team_search(30, 10, battle_format, 3)
         )
     teambuilder.save_team(poke_path.agent_dir)
-
-    env = Gen8Env(
-        ops,
-        **rewards,
+    env = build_env(
+        ops=ops,
         seq_len=seq_len,
         poke_path=poke_path,
+        **rewards,
         battle_format=battle_format,
-        start_challenging=True,
         team_size=starting_team_size,
         change_opponent=False,
-        starting_opponent="SimpleHeuristics",
+        starting_opponent="FixedHeuristics",
         team=teambuilder,
     )
 
@@ -64,10 +63,12 @@ def setup(
                 n_heads=8,
                 d_feedforward=1024,
                 dropout=0.0,
+                ensemble_size=ensemble_size,
             ),
             net_arch=dict(pi=pi, vf=vf),
             activation_fn=torch.nn.LeakyReLU,
         ),
+        n_steps=1024,
     )
 
     return env, model
@@ -79,6 +80,8 @@ def main(
     battle_format: str,
     total_timesteps: int,
     save_freq: int,
+    seq_len: int,
+    ensemble_size: int,
     shared: typing.List[int],
     pi: typing.List[int],
     vf: typing.List[int],
@@ -94,12 +97,13 @@ def main(
         )
     else:
         poke_path = PokePath(tag=tag)
-
+        # s1 = tracemalloc.take_snapshot()
         env, model = setup(
             ops=ops,
             rewards=rewards,
             battle_format=battle_format,
-            seq_len=1,
+            seq_len=seq_len,
+            ensemble_size=ensemble_size,
             shared=shared,
             pi=pi,
             vf=vf,
@@ -108,6 +112,7 @@ def main(
             teambuilder=teambuilder,
         )
 
+    print(f"Saving to: {poke_path.agent_dir}")
     checkpoint_callback = sb3_callbacks.CheckpointCallback(
         save_freq,
         save_path=str(poke_path.agent_dir),
@@ -118,8 +123,9 @@ def main(
         callbacks.SavePeripheralsCallback(poke_path=poke_path, save_freq=save_freq),
     ]
 
+    starting_step = 0
     if starting_team_size != final_team_size:
-        training.curriculum(
+        starting_step = training.curriculum(
             env=env,
             model=model,
             starting_team_size=starting_team_size,
@@ -129,10 +135,11 @@ def main(
             callback_list=sb3_callbacks.CallbackList(
                 callback_list
                 + [
-                    callbacks.CurriculumCallback(threshold=0.5),
+                    callbacks.CurriculumCallback(poke_path.agent_dir),
                 ]
             ),
         )
+
     env.set_team_size(final_team_size)
     env.change_opponent = True
 
@@ -149,6 +156,7 @@ def main(
                 )
             ]
         ),
+        starting_step=starting_step,
     )
 
 

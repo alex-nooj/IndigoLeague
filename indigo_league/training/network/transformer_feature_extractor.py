@@ -6,7 +6,7 @@ import torch
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from torch import nn
 
-from indigo_league.training.network.pokemon_transformer import PokemonTransformer
+from indigo_league.training.network.dense_ensemble import EnsembleNetwork
 
 
 class RemoveSeqLayer(nn.Module):
@@ -24,11 +24,9 @@ class PokemonFeatureExtractor(BaseFeaturesExtractor):
         embedding_infos: typing.Dict[str, typing.Tuple[int, int, int]],
         seq_len: int,
         shared: typing.List[int],
-        n_linear_layers: int,
-        n_encoders: int,
-        n_heads: int,
-        d_feedforward: int,
-        dropout: float = 0.0,
+        ensemble_size: int = 1,
+        *args,
+        **kwargs,
     ):
         """Constructor function.
 
@@ -62,34 +60,28 @@ class PokemonFeatureExtractor(BaseFeaturesExtractor):
                 input_size += subspace.shape[0]
         self.extractors = nn.ModuleDict(extractors)
         self.seq_len = seq_len
-        print(f"Input size: {input_size}")
         layers = []
-        if seq_len > 1:
-            print(f"Encoder size: {input_size // seq_len}")
-            layers = [
+        print(f"Input size: {input_size}")
+
+        in_vals = [input_size] + shared[:-1]
+        layers.append(("Remove Seq Len", RemoveSeqLayer()))
+
+        if ensemble_size == 1:
+            for ix, (in_val, out_val) in enumerate(zip(in_vals, shared)):
+                layers.append((f"Linear {ix}", nn.Linear(in_val, out_val)))
+                layers.append((f"ReLU {ix}", nn.ReLU()))
+        else:
+            layers.append(
                 (
-                    "Transformer",
-                    PokemonTransformer(
-                        input_size,
-                        64,
-                        128,
-                        seq_len,
-                        n_encoders,
-                        n_heads,
-                        d_feedforward,
-                        dropout,
+                    "Ensemble Network",
+                    EnsembleNetwork(
+                        in_size=input_size,
+                        out_size=shared[-1],
+                        ensemble_size=ensemble_size,
+                        layer_sizes=shared[:-1],
                     ),
                 )
-            ]
-            in_vals = [64 * seq_len] + shared[:-1]
-        else:
-            print(f"Input size: {input_size * seq_len}")
-            in_vals = [input_size] + shared[:-1]
-            layers.append(("Remove Seq Len", RemoveSeqLayer()))
-
-        for ix, (in_val, out_val) in enumerate(zip(in_vals, shared)):
-            layers.append((f"Linear {ix}", nn.Linear(in_val, out_val)))
-            layers.append((f"ReLU {ix}", nn.ReLU()))
+            )
         self.layers = nn.Sequential(OrderedDict(layers))
 
     def forward(self, obs: typing.Dict[str, torch.Tensor]) -> torch.Tensor:

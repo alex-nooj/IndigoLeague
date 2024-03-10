@@ -1,8 +1,16 @@
-FROM nvidia/cuda:11.2.2-base-ubuntu20.04 as build
+FROM nvidia/cuda:12.3.1-base-ubuntu20.04 as build
 
-USER root
-
+ARG USER_ID=1000
+ARG GROUP_ID=1000
 ARG DEBIAN_FRONTEND=noninteractive
+ARG WORKSPACE_DIR=/workspaces/IndigoLeague
+
+WORKDIR ${WORKSPACE_DIR}
+
+RUN addgroup --gid $GROUP_ID usergroup \
+    && adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID user
+
+COPY requirements.txt setup.py ${WORKSPACE_DIR}/
 
 RUN apt-get update && apt-get install -y  \
     curl  \
@@ -11,16 +19,15 @@ RUN apt-get update && apt-get install -y  \
     python3-pip \
     libcusparse-11-2 && \
     rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python && \
-    pip install --upgrade pip
+    pip install --upgrade pip && \
+    cd ${WORKSPACE_DIR} && \
+    pip install -r ${WORKSPACE_DIR}/requirements.txt
 
-FROM build as prod
+COPY data ${WORKSPACE_DIR}/data
+COPY indigo_league ${WORKSPACE_DIR}/indigo_league
 
-ARG WORKSPACE_DIR=/workspaces/IndigoLeague
+RUN pip install ${WORKSPACE_DIR}/.
 
-WORKDIR ${WORKSPACE_DIR}
+USER user
 
-COPY . ${WORKSPACE_DIR}
-
-RUN pip install -r ${WORKSPACE_DIR}/requirements.txt
-
-ENTRYPOINT ["/bin/bash/"]
+CMD ["python", "-m", "indigo_league.main"]

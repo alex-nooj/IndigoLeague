@@ -31,10 +31,7 @@ def moves_mask(
 
     for ix, move in enumerate(active_pokemon.moves.values()):
         if move.id in [m.id for m in available_moves]:
-            if (
-                format_str(move.id) == "substitute"
-                and Effect.SUBSTITUTE in active_pokemon.effects
-            ):
+            if format_str(move.id) == "substitute" and Effect.SUBSTITUTE in active_pokemon.effects:
                 moves[ix] = 0.0
             else:
                 moves[ix] = 1.0 if move.current_pp != 0 else 0.0

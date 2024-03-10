@@ -4,6 +4,8 @@ import typing
 import torch
 from sb3_contrib import MaskablePPO
 
+from indigo_league.teams import load_team_from_file
+from indigo_league.training.environment import build_env
 from indigo_league.training.environment import Gen8Env
 from indigo_league.utils.directory_helper import PokePath
 
@@ -21,19 +23,19 @@ def resume_training(
     print(team_file)
     team_info = torch.load(team_file)
     team = team_info["team"]
+    team.set_team(load_team_from_file(str(resume_path.parent / "team.txt")))
     preprocessor = team_info["preprocessor"]
 
-    env = Gen8Env(
-        preprocessor,
-        **rewards,
-        poke_path=poke_path,
-        battle_format=battle_format,
-        start_challenging=True,
-        team=team,
-        team_size=team.team_size,
-        change_opponent=False,
-        starting_opponent="SimpleHeuristics",
+    env = build_env(
+        ops=preprocessor,
         seq_len=1,
+        poke_path=poke_path,
+        **rewards,
+        battle_format=battle_format,
+        team_size=team.team_size,
+        team=team,
+        change_opponent=False,
+        starting_opponent="FixedHeuristics",
     )
 
     model = MaskablePPO.load(

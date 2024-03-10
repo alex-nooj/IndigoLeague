@@ -1,16 +1,18 @@
 # Overview
 battle_format: gen8ou
-total_timesteps: 100_000_000
+total_timesteps: 500_000
 save_freq: 50_000
-#resume: /media/alex/USB322FD/pokemon_league/challengers/Giovanni/Giovanni_217600_steps.zip
+#resume: /home/alex/Desktop/pokemon_league/challengers/Blue/keyboard_interrupt.zip
 starting_team_size: 1
-#team: /media/alex/USB322FD/pokemon_league/team.txt
+team: /workspaces/pokemon_league/challengers/Blue/team.txt
+
+seq_len: 1
+ensemble_size: 1
 
 # Network
 shared:
   - 128
-  - 128
-  - 128
+  - 64
   - 64
 
 pi:
@@ -21,26 +23,22 @@ vf:
 
 # Preprocessing
 ops:
-#  indigo_league.training.preprocessing.ops.EmbedPokemonIDs:
-#    embedding_size: 8
-#  indigo_league.training.preprocessing.ops.EmbedMoves:
-#    embedding_size: 8
-#  indigo_league.training.preprocessing.ops.EmbedAbilities:
-#    embedding_size: 8
-#  indigo_league.training.preprocessing.ops.EmbedActivePokemon: {}
-#  indigo_league.training.preprocessing.ops.SimpleOp: {}
   indigo_league.training.preprocessing.ops.HeuristicsOp: {}
-#  indigo_league.training.preprocessing.ops.EmbedTeam: {}
-#  indigo_league.training.preprocessing.ops.EmbedActiveMoves: {}
-#  indigo_league.training.preprocessing.ops.EmbedPreviousMoves: {}
   indigo_league.training.preprocessing.ops.EmbedField: {}
-#  indigo_league.training.preprocessing.ops.EmbedItems:
-#    embedding_size: 5
   indigo_league.training.preprocessing.ops.EmbedActiveIdx: {}
 
 # Rewards
 rewards:
-  fainted_value: 0.2
-  hp_value: 0.1
-  status_value: 0.0
-  victory_value: 1.0
+  schedule: 10_000
+  fainted_value:
+    value: 0.2
+    scale: 1.0
+  hp_value:
+    value: 0.1
+    scale: 1.0
+  status_value:
+    value: 0.0
+    scale: 1.0
+  victory_value:
+    value: 1.0
+    scale: 1.0

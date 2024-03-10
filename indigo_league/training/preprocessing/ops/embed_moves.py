@@ -8,7 +8,7 @@ from poke_env.environment import AbstractBattle
 from indigo_league.training.preprocessing.op import Op
 from indigo_league.training.preprocessing.utils import EmbeddingLUT
 from indigo_league.utils.constants import NUM_MOVES
-from indigo_league.utils.smogon_data import SmogonData
+from indigo_league.teams.smogon_data import SmogonData
 
 
 class EmbedMoves(Op):

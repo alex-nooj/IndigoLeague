@@ -78,3 +78,6 @@ class OpponentPlayer(Player):
                 battle.team[mon].status != Status.FNT and not battle.team[mon].active
             )
         return np.concatenate([moves, team])
+
+    def reset(self):
+        self._preprocessor.reset()

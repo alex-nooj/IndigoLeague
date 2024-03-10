@@ -68,7 +68,9 @@
             "teleport",
             "toxic",
             "doubleedge",
-            "curse"
+            "curse",
+            "reflect",
+            "painsplit"
         ],
   "hitmonlee": [
             "suckerpunch",
@@ -125,7 +127,7 @@
   "blastoise": ["curse", "bubblebeam", "doubleedge", "defensecurl", "block", "followme", "dynamicpunch"],
   "charizard": ["tailwind", "toxic", "reflect", "double-edge", "quickattack", "sandstorm", "skullbash", "submission"],
   "cloyster": ["teleport", "doubleedge", "frostbreath", "reflect"],
-  "nidoking": ["detect"],
+  "nidoking": ["detect", "reflect", "honeclaws"],
   "scizor": ["skullbash", "curse", "detect", "bugbite"],
   "slowking": ["zapcannon", "dynamicpunch", "snore", "icywind", "endure", "irontail", "dig", "mudslap", "icepunch", "swift", "furycutter", "nightmare", "strength", "flash", "whirlpool", "reflect", "counter"],
   "skarmory": ["detect", "tailwind"],
@@ -137,5 +139,6 @@
   "zapdos": ["whirlwind", "curse", "tailwind"],
   "weavile": ["detect", "curse"],
   "magnezone": ["teleport", "curse"],
-  "mew": ["vacuumwave", "whirlwind", "nightshade", "tailwind", "fakeout", "confusion", "aquatail"]
+  "slowbro": ["reflect"],
+  "mew": ["vacuumwave", "whirlwind", "nightshade", "tailwind", "fakeout", "confusion", "aquatail", "suckerpunch", "detect"]
 }

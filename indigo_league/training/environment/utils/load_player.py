@@ -30,7 +30,7 @@ def load_player(
                 randomize_team=True,
             ),
         )
-    elif tag == "SimpleHeuristics" or tag == "FixedHeuristics":
+    elif tag == "FixedHeuristics":
         return FixedHeuristicsPlayer(
             battle_format=battle_format,
             team=AgentTeamBuilder(

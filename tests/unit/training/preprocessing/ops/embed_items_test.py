@@ -1,7 +1,7 @@
 import typing
 
 from indigo_league.training.preprocessing.ops import EmbedItems
-from indigo_league.utils.smogon_data import SmogonData
+from indigo_league.teams.smogon_data import SmogonData
 
 
 def setup() -> typing.Tuple[EmbedItems, typing.List[str]]:

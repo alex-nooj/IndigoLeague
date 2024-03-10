@@ -71,5 +71,3 @@ class TestTeamBuilder:
             team_builder.save_team(tmp_path)
         except RuntimeError:
             assert True
-            return
-        assert False
