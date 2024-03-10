@@ -1,5 +1,3 @@
-# import tracemalloc
-# tracemalloc.start()
 import asyncio
 import pathlib
 import typing
@@ -113,12 +111,6 @@ def main(
             poke_path=poke_path,
             teambuilder=teambuilder,
         )
-        # s2 = tracemalloc.take_snapshot()
-        #
-        # top_stats = s2.compare_to(s1, "lineno")
-        # for stat in top_stats[:50]:
-        #     print(stat)
-        # print("\n\n")
 
     print(f"Saving to: {poke_path.agent_dir}")
     checkpoint_callback = sb3_callbacks.CheckpointCallback(
@@ -183,8 +175,3 @@ if __name__ == "__main__":
             print("Could not open team file!")
         del cfg["team"]
     main(**cfg)
-    # snapshot = tracemalloc.take_snapshot()
-    # top_stats = snapshot.statistics("lineno")
-    #
-    # for stat in top_stats[:50]:
-    #     print(stat)

@@ -1,16 +1,7 @@
-# Define the name of the Docker network
 NETWORK_NAME = host
-
-# Define the name of the Docker image to run
 IMAGE_NAME = showdown
-
-# Version name
 VERSION=$(shell cat VERSION)
-
-# Define the name of the Docker image to build
 AGENT_IMAGE_NAME = poke-agent
-
-# Define the path to the directory to mount
 MOUNT_DIR = ../pokemon_league
 
 UID=$(shell id -u)

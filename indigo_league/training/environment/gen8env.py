@@ -157,11 +157,11 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
     def step(
         self, action: ActionType
     ) -> typing.Tuple[ObservationType, float, bool, dict]:
-        # self._logger.debug(f"Action: {action}")
+        self._logger.debug(f"Action: {action}")
         obs, reward, done, info = super().step(action=action)
-        # self._logger.debug(f"Obs: {obs}")
-        # self._logger.debug(f"Reward: {reward}")
-        # self._logger.debug(f"Done: {done}")
+        self._logger.debug(f"Obs: {obs}")
+        self._logger.debug(f"Reward: {reward}")
+        self._logger.debug(f"Done: {done}")
         if done:
             info["win"] = {
                 "opp": self._opp_tag,
@@ -181,30 +181,30 @@ class Gen8Env(poke_env.player.Gen8EnvSinglePlayer):
 
     def action_masks(self, *args, **kwargs) -> npt.NDArray:
         mask = action_masks(self.current_battle)
-        # self._logger.debug(f"Mask: {mask}")
+        self._logger.debug(f"Mask: {mask}")
         return mask
 
     def action_to_move(self, action: int, battle: Battle) -> BattleOrder:
         action_mask = self.action_masks()
         if action_mask[action]:
             if action < NUM_MOVES:
-                # self._logger.debug(
-                #     f"Action {action} interpreted as a move "
-                #     + f"({list(battle.active_pokemon.moves.keys())[action]}"
-                # )
+                self._logger.debug(
+                    f"Action {action} interpreted as a move "
+                    + f"({list(battle.active_pokemon.moves.keys())[action]}"
+                )
                 return self.agent.create_order(
                     list(battle.active_pokemon.moves.values())[action]
                 )
             else:
-                # self._logger.debug(
-                #     f"Action {action} interpreted as a switch "
-                #     + f"({list(battle.team.values())[action - NUM_MOVES]}"
-                # )
+                self._logger.debug(
+                    f"Action {action} interpreted as a switch "
+                    + f"({list(battle.team.values())[action - NUM_MOVES]}"
+                )
                 return self.agent.create_order(
                     list(battle.team.values())[action - NUM_MOVES]
                 )
         else:
-            # self._logger.debug(f"Had to choose random action (given {action})")
+            self._logger.debug(f"Had to choose random action (given {action})")
             return self.agent.choose_random_move(battle)
 
     def set_team_size(self, team_size: int):

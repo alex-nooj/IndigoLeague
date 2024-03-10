@@ -41,7 +41,6 @@ def curriculum(
     poke_path: PokePath,
     callback_list: sb3_callbacks.CallbackList,
 ) -> int:
-    # tracemalloc.start()
 
     starting_step = 0
     for team_size in range(starting_team_size, final_team_size + 1):
@@ -57,10 +56,5 @@ def curriculum(
         )
         env.reset_battles()
         gc.collect()  # Poke Env's JSON decoders don't go away on their own
-        # snapshot = tracemalloc.take_snapshot()
-        # top_stats = snapshot.statistics("lineno")
-        # print("[ Top 10 ]")
-        # for stat in top_stats[:10]:
-        #     print(stat)
 
     return starting_step
